@@ -1,1 +1,2 @@
 log_path: testdata/
+database_url: postgres://cslogparser:keJee4Ee@localhost:5432/gocslogparser

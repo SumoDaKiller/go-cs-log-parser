@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sync"
 )
 
@@ -27,6 +26,7 @@ func main() {
 }
 
 func run(path string, out io.Writer) error {
+
 	errCh := make(chan error)
 	doneCh := make(chan struct{})
 	filesCh := make(chan string)
@@ -54,7 +54,7 @@ func run(path string, out io.Writer) error {
 
 	re := initializeRegexpPatterns()
 
-	for i := 0; i < runtime.NumCPU(); i++ {
+	for i := 0; i < 4; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
