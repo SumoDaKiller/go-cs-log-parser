@@ -8,6 +8,67 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Attack struct {
+	ID               int64
+	AttackerID       pgtype.Int8
+	AttackedID       pgtype.Int8
+	RoundID          pgtype.Int8
+	AttackTime       pgtype.Time
+	AttackDate       pgtype.Date
+	AttackerTeamID   pgtype.Int8
+	AttackedTeamID   pgtype.Int8
+	AttackerPosition []byte
+	AttackedPosition []byte
+	AttackerWeaponID pgtype.Int8
+	Damage           int32
+	DamageArmor      int32
+	Health           int32
+	Armor            int32
+	HitGroupID       pgtype.Int8
+}
+
+type GameType struct {
+	ID   int64
+	Name string
+}
+
+type HitGroup struct {
+	ID   int64
+	Name string
+}
+
+type Kill struct {
+	ID             int64
+	KillerID       pgtype.Int8
+	KilledID       pgtype.Int8
+	RoundID        pgtype.Int8
+	KillTime       pgtype.Time
+	KillDate       pgtype.Date
+	KillerTeamID   pgtype.Int8
+	KilledTeamID   pgtype.Int8
+	KillerPosition []byte
+	KilledPosition []byte
+	KillerWeaponID pgtype.Int8
+	SpecialID      pgtype.Int8
+}
+
+type Map struct {
+	ID   int64
+	Name string
+}
+
+type Match struct {
+	ID         int64
+	StartDate  pgtype.Date
+	StartTime  pgtype.Time
+	EndDate    pgtype.Date
+	EndTime    pgtype.Time
+	MapID      pgtype.Int8
+	ScoreCt    int32
+	ScoreT     int32
+	GameTypeID pgtype.Int8
+}
+
 type Player struct {
 	ID          int64
 	SteamUserID pgtype.Int8
@@ -15,8 +76,50 @@ type Player struct {
 	Bot         pgtype.Bool
 }
 
+type Round struct {
+	ID           int64
+	StartDate    pgtype.Date
+	StartTime    pgtype.Time
+	EndDate      pgtype.Date
+	EndTime      pgtype.Time
+	MatchID      pgtype.Int8
+	WinnerTeamID pgtype.Int8
+}
+
+type RoundTeam struct {
+	ID       int64
+	PlayerID pgtype.Int8
+	TeamID   pgtype.Int8
+	RoundID  pgtype.Int8
+}
+
+type SpecialKill struct {
+	ID   int64
+	Name string
+}
+
 type SteamUser struct {
 	ID               int64
 	SteamID          string
 	SteamCommunityID int64
+}
+
+type Team struct {
+	ID   int64
+	Name string
+}
+
+type TeamSwitch struct {
+	ID         int64
+	PlayerID   pgtype.Int8
+	FromTeamID pgtype.Int8
+	ToTeamID   pgtype.Int8
+	SwitchDate pgtype.Date
+	SwitchTime pgtype.Time
+	RoundID    pgtype.Int8
+}
+
+type Weapon struct {
+	ID   int64
+	Name string
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"go-cs-log-parser/database"
 	"io"
 	"log"
@@ -16,13 +17,26 @@ import (
 func initializeRegexpPatterns() map[string]*regexp.Regexp {
 	re := make(map[string]*regexp.Regexp)
 	re["matchStart"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): World triggered "Match_Start" on "(?P<map>\w+)"$`)
+	re["matchStatus"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): MatchStatus: Score: (?P<ctScore>\d+):(?P<tScore>\d+) on map "(?P<map>\w+)" RoundsPlayed: (?P<roundsPlayed>\d+)$`)
+	// L 10/25/2022 - 19:18:09: MatchStatus: Team "CT" is unset.
+	// L 10/25/2022 - 19:18:09: MatchStatus: Team "TERRORIST" is unset.
+	// L 10/25/2022 - 19:18:09: MatchStatus: Score: 0:0 on map "de_anubis" RoundsPlayed: 0
 	re["roundStart"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): World triggered "Round_Start"$`)
 	re["roundEnd"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): World triggered "Round_End"$`)
+	// L 10/25/2022 - 19:19:13: Team "TERRORIST" triggered "SFUI_Notice_Terrorists_Win" (CT "0") (T "1")
+	// L 10/25/2022 - 19:19:13: Team "CT" scored "0" with "5" players
+	// L 10/25/2022 - 19:19:13: Team "TERRORIST" scored "1" with "6" players
+	// L 10/25/2022 - 19:19:13: MatchStatus: Team "CT" is unset.
+	// L 10/25/2022 - 19:19:13: MatchStatus: Team "TERRORIST" is unset.
+	// L 10/25/2022 - 19:19:13: MatchStatus: Score: 0:1 on map "de_anubis" RoundsPlayed: 1
+	// L 10/25/2022 - 19:19:13: World triggered "Round_End"
 	re["gameOver"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): Game Over: (?P<gameType>\w+) (?P<mapPool>\w+) (?P<map>\w+) score (?P<ctScore>\d+):(?P<tScore>\d+) after (?P<mapTime>\d+) min$`)
-	re["matchStatus"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): MatchStatus: Score: (?P<ctScore>\d+):(?P<tScore>\d+) on map "(?P<map>\w+)" RoundsPlayed: (?P<roundsPlayed>\d+)$`)
-	// L 10/25/2022 - 19:16:52: "Drier!<28><STEAM_1:1:68904496>" switched from team <Unassigned> to <TERRORIST>
 	re["switchTeam"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)>(<(?P<currentTeam>CT|TERRORIST|Unassigned)>)?" switched from team <(?P<fromTeam>CT|TERRORIST|Unassigned)> to <(?P<toTeam>CT|TERRORIST|Unassigned)>$`)
 	re["killed"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<killerName>[^<]+)<\d+><(?P<killerSteamId>BOT|STEAM[^>]+)><(?P<killerTeam>CT|TERRORIST)>" \[(?P<killerXYZ>-?\d+ -?\d+ -?\d+)] killed "(?P<killedName>[^<]+)<\d+><(?P<killedSteamId>BOT|STEAM[^>]+)><(?P<killedTeam>CT|TERRORIST)>" \[(?P<killedXYZ>-?\d+ -?\d+ -?\d+)] with "(?P<killerWeapon>\w+)"\s?\(?(?P<special>\w*)\)?$`)
+	// L 10/25/2022 - 19:19:13: "Sumo da Killer<15><STEAM_1:0:402610><TERRORIST>" assisted killing "MR.BROKEN<27><STEAM_1:0:513509837><CT>"
+	// L 10/25/2022 - 19:19:39: "MR.BROKEN<27><STEAM_1:0:513509837><CT>" threw flashbang [-1838 47 916] flashbang entindex 221)
+	// L 10/25/2022 - 19:19:39: "Norm<68><BOT><TERRORIST>" blinded for 0.19 by "MR.BROKEN<27><STEAM_1:0:513509837><CT>" from flashbang entindex 221
+	// L 10/25/2022 - 19:20:02: "Ziduac<2><STEAM_1:0:202544><CT>" [262 919 -31] killed other "chicken<157>" [234 935 -32] with "knife"
 	re["shopping"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" (?P<type>dropped|purchased|picked up) "(?P<item>[^"])"$`)
 	re["moneyChange"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" money change [^=]= \$(?P<newTotal>\d+) \(tracked\)\s?\(?[^:]*:?\s?(?P<item>[^)]*)\)?$`)
 	re["leftBuyZone"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" left buyzone with \[(?P<items>[^]])]$`)
@@ -65,8 +79,10 @@ func parseFile(r io.Reader, re map[string]*regexp.Regexp) error {
 		line := scanner.Text()
 		for key, rgx := range re {
 			if rgx.MatchString(line) {
-				fmt.Println(key)
-				if key == "switchTeam" {
+				switch key {
+				case "matchStart":
+					fmt.Println("matchStart")
+				case "switchTeam":
 					matches := rgx.FindStringSubmatch(line)
 					dateIdx := rgx.SubexpIndex("date")
 					timeIdx := rgx.SubexpIndex("time")
@@ -106,7 +122,7 @@ func handleSwitchTeam(ctx context.Context, conn *pgx.Conn, date string, time str
 			return err
 		}
 	}
-	/*player, err := queries.GetPlayerByName(ctx, playerName)
+	player, err := queries.GetPlayerByName(ctx, playerName)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			// First time we see this player name so create it in the database
@@ -114,11 +130,12 @@ func handleSwitchTeam(ctx context.Context, conn *pgx.Conn, date string, time str
 			if steamId == "BOT" {
 				bot = true
 			}
-			player, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{Name: playerName, SteamUserID: steamUser.ID, Bot: bot})
+			player, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{Name: playerName, SteamUserID: pgtype.Int8{Int64: steamUser.ID, Valid: true}, Bot: pgtype.Bool{Bool: bot, Valid: true}})
 		} else {
 			return err
 		}
-	}*/
+	}
 	fmt.Println(steamUser)
+	fmt.Println(player)
 	return nil
 }
