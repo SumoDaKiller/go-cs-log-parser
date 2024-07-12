@@ -53,8 +53,8 @@ func run(path string, out io.Writer) error {
 	}()
 
 	re := initializeRegexpPatterns()
-
-	for i := 0; i < 4; i++ {
+	// TODO: Only use one thread for now as there are some table that might be written to with the same data in each thread, and then hits unique errors
+	for i := 0; i < 1; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

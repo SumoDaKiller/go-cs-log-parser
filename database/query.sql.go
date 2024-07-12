@@ -291,7 +291,7 @@ func (q *Queries) CreateTeam(ctx context.Context, name string) (Team, error) {
 }
 
 const createTeamSwitchEvent = `-- name: CreateTeamSwitchEvent :exec
-insert into team_switch (player_id, from_team_id, to_team_id, switch_date, switch_time) values ($1, $2, $3, $4, $5) returning id, player_id, from_team_id, to_team_id, switch_date, switch_time, round_id
+insert into team_switch (player_id, from_team_id, to_team_id, switch_date, switch_time, round_id) values ($1, $2, $3, $4, $5, $6) returning id, player_id, from_team_id, to_team_id, switch_date, switch_time, round_id
 `
 
 type CreateTeamSwitchEventParams struct {
@@ -300,6 +300,7 @@ type CreateTeamSwitchEventParams struct {
 	ToTeamID   pgtype.Int8
 	SwitchDate pgtype.Date
 	SwitchTime pgtype.Time
+	RoundID    pgtype.Int8
 }
 
 func (q *Queries) CreateTeamSwitchEvent(ctx context.Context, arg CreateTeamSwitchEventParams) error {
@@ -309,6 +310,7 @@ func (q *Queries) CreateTeamSwitchEvent(ctx context.Context, arg CreateTeamSwitc
 		arg.ToTeamID,
 		arg.SwitchDate,
 		arg.SwitchTime,
+		arg.RoundID,
 	)
 	return err
 }

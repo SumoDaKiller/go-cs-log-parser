@@ -126,7 +126,7 @@ update rounds set end_date=$2, end_time=$3, winner_team_id=$4 where id = $1;
 select * from team_switch where player_id = $1 and switch_date = $2 and switch_time = $3 limit 1;
 
 -- name: CreateTeamSwitchEvent :exec
-insert into team_switch (player_id, from_team_id, to_team_id, switch_date, switch_time) values ($1, $2, $3, $4, $5) returning *;
+insert into team_switch (player_id, from_team_id, to_team_id, switch_date, switch_time, round_id) values ($1, $2, $3, $4, $5, $6) returning *;
 
 -- Round Teams
 
