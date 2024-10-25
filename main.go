@@ -42,6 +42,7 @@ func run(path string, out io.Writer) error {
 					return err
 				}
 				if filepath.Ext(path) == ".log" {
+					fmt.Printf("Now parsing log file: %s\n", path)
 					filesCh <- path
 				}
 				return nil

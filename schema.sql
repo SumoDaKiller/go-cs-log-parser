@@ -29,12 +29,32 @@ CREATE TABLE IF NOT EXISTS weapons (
     name varchar(255) not null unique
 );
 
+CREATE TABLE IF NOT EXISTS items (
+    id BIGSERIAL PRIMARY KEY,
+    name varchar(255) not null unique
+);
+
+CREATE TABLE IF NOT EXISTS item_actions (
+    id BIGSERIAL PRIMARY KEY,
+    name varchar(255) not null unique
+);
+
 CREATE TABLE IF NOT EXISTS special_kills (
     id BIGSERIAL PRIMARY KEY,
     name varchar(255) not null unique
 );
 
+CREATE TABLE IF NOT EXISTS other_kills (
+    id BIGSERIAL PRIMARY KEY,
+    name varchar(255) not null unique
+);
+
 CREATE TABLE IF NOT EXISTS game_types (
+    id BIGSERIAL PRIMARY KEY,
+    name varchar(50) not null unique
+);
+
+CREATE TABLE IF NOT EXISTS events (
     id BIGSERIAL PRIMARY KEY,
     name varchar(50) not null unique
 );
@@ -83,6 +103,51 @@ CREATE TABLE IF NOT EXISTS round_teams (
     round_id BIGINT references rounds(id)
 );
 
+CREATE TABLE IF NOT EXISTS item_interactions (
+    id BIGSERIAL PRIMARY KEY,
+    player_id BIGINT references players(id),
+    team_id BIGINT references teams(id),
+    round_id BIGINT references rounds(id),
+    item_id BIGINT references items(id),
+    item_action BIGINT references item_actions(id),
+    interaction_time time not null,
+    interaction_date date not null
+);
+
+CREATE TABLE IF NOT EXISTS money_change (
+    id BIGSERIAL PRIMARY KEY,
+    player_id BIGINT references players(id),
+    team_id BIGINT references teams(id),
+    round_id BIGINT references rounds(id),
+    item_id BIGINT references items(id),
+    new_total INT not null,
+    change_time time not null,
+    change_date date not null
+);
+
+CREATE TABLE IF NOT EXISTS player_suicide (
+    id BIGSERIAL PRIMARY KEY,
+    player_id BIGINT references players(id),
+    team_id BIGINT references teams(id),
+    round_id BIGINT references rounds(id),
+    with_item_id BIGINT references items(id),
+    player_position_x INT not null,
+    player_position_y INT not null,
+    player_position_z INT not null,
+    suicide_time time not null,
+    suicide_date date not null
+);
+
+CREATE TABLE IF NOT EXISTS triggered_events (
+    id BIGSERIAL PRIMARY KEY,
+    player_id BIGINT references players(id),
+    team_id BIGINT references teams(id),
+    round_id BIGINT references rounds(id),
+    event_id BIGINT references events(id),
+    event_time time not null,
+    event_date date not null
+);
+
 CREATE TABLE IF NOT EXISTS kills (
     id BIGSERIAL PRIMARY KEY,
     killer_id BIGINT references players(id),
@@ -100,6 +165,34 @@ CREATE TABLE IF NOT EXISTS kills (
     killed_position_z INT not null,
     killer_weapon_id BIGINT references weapons(id),
     special_id BIGINT references special_kills(id)
+);
+
+CREATE TABLE IF NOT EXISTS kills_assisted (
+    id BIGSERIAL PRIMARY KEY,
+    killer_id BIGINT references players(id),
+    killed_id BIGINT references players(id),
+    round_id BIGINT references rounds(id),
+    kill_time time not null,
+    kill_date date not null,
+    killer_team_id BIGINT references teams(id),
+    killed_team_id BIGINT references teams(id)
+);
+
+CREATE TABLE IF NOT EXISTS kills_other (
+    id BIGSERIAL PRIMARY KEY,
+    killer_id BIGINT references players(id),
+    killed_other_id BIGINT references other_kills(id),
+    round_id BIGINT references rounds(id),
+    kill_time time not null,
+    kill_date date not null,
+    killer_team_id BIGINT references teams(id),
+    killer_position_x INT not null,
+    killer_position_y INT not null,
+    killer_position_z INT not null,
+    killed_position_x INT not null,
+    killed_position_y INT not null,
+    killed_position_z INT not null,
+    killer_weapon_id BIGINT references weapons(id)
 );
 
 CREATE TABLE IF NOT EXISTS attacks (

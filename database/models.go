@@ -31,6 +31,11 @@ type Attack struct {
 	HitGroupID        pgtype.Int8
 }
 
+type Event struct {
+	ID   int64
+	Name string
+}
+
 type GameType struct {
 	ID   int64
 	Name string
@@ -39,6 +44,27 @@ type GameType struct {
 type HitGroup struct {
 	ID   int64
 	Name string
+}
+
+type Item struct {
+	ID   int64
+	Name string
+}
+
+type ItemAction struct {
+	ID   int64
+	Name string
+}
+
+type ItemInteraction struct {
+	ID              int64
+	PlayerID        pgtype.Int8
+	TeamID          pgtype.Int8
+	RoundID         pgtype.Int8
+	ItemID          pgtype.Int8
+	ItemAction      pgtype.Int8
+	InteractionTime pgtype.Time
+	InteractionDate pgtype.Date
 }
 
 type Kill struct {
@@ -60,6 +86,34 @@ type Kill struct {
 	SpecialID       pgtype.Int8
 }
 
+type KillsAssisted struct {
+	ID           int64
+	KillerID     pgtype.Int8
+	KilledID     pgtype.Int8
+	RoundID      pgtype.Int8
+	KillTime     pgtype.Time
+	KillDate     pgtype.Date
+	KillerTeamID pgtype.Int8
+	KilledTeamID pgtype.Int8
+}
+
+type KillsOther struct {
+	ID              int64
+	KillerID        pgtype.Int8
+	KilledOtherID   pgtype.Int8
+	RoundID         pgtype.Int8
+	KillTime        pgtype.Time
+	KillDate        pgtype.Date
+	KillerTeamID    pgtype.Int8
+	KillerPositionX int32
+	KillerPositionY int32
+	KillerPositionZ int32
+	KilledPositionX int32
+	KilledPositionY int32
+	KilledPositionZ int32
+	KillerWeaponID  pgtype.Int8
+}
+
 type Map struct {
 	ID   int64
 	Name string
@@ -77,11 +131,40 @@ type Match struct {
 	GameTypeID pgtype.Int8
 }
 
+type MoneyChange struct {
+	ID         int64
+	PlayerID   pgtype.Int8
+	TeamID     pgtype.Int8
+	RoundID    pgtype.Int8
+	ItemID     pgtype.Int8
+	NewTotal   int32
+	ChangeTime pgtype.Time
+	ChangeDate pgtype.Date
+}
+
+type OtherKill struct {
+	ID   int64
+	Name string
+}
+
 type Player struct {
 	ID          int64
 	SteamUserID pgtype.Int8
 	Name        string
 	Bot         pgtype.Bool
+}
+
+type PlayerSuicide struct {
+	ID              int64
+	PlayerID        pgtype.Int8
+	TeamID          pgtype.Int8
+	RoundID         pgtype.Int8
+	WithItemID      pgtype.Int8
+	PlayerPositionX int32
+	PlayerPositionY int32
+	PlayerPositionZ int32
+	SuicideTime     pgtype.Time
+	SuicideDate     pgtype.Date
 }
 
 type Round struct {
@@ -125,6 +208,16 @@ type TeamSwitch struct {
 	SwitchDate pgtype.Date
 	SwitchTime pgtype.Time
 	RoundID    pgtype.Int8
+}
+
+type TriggeredEvent struct {
+	ID        int64
+	PlayerID  pgtype.Int8
+	TeamID    pgtype.Int8
+	RoundID   pgtype.Int8
+	EventID   pgtype.Int8
+	EventTime pgtype.Time
+	EventDate pgtype.Date
 }
 
 type Weapon struct {

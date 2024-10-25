@@ -85,6 +85,17 @@ func (q *Queries) CreateAttack(ctx context.Context, arg CreateAttackParams) (Att
 	return i, err
 }
 
+const createEvent = `-- name: CreateEvent :one
+insert into events (name) values ($1) returning id, name
+`
+
+func (q *Queries) CreateEvent(ctx context.Context, name string) (Event, error) {
+	row := q.db.QueryRow(ctx, createEvent, name)
+	var i Event
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const createGameType = `-- name: CreateGameType :one
 insert into game_types (name) values ($1) returning id, name
 `
@@ -104,6 +115,66 @@ func (q *Queries) CreateHitGroup(ctx context.Context, name string) (HitGroup, er
 	row := q.db.QueryRow(ctx, createHitGroup, name)
 	var i HitGroup
 	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const createItem = `-- name: CreateItem :one
+insert into items (name) values ($1) returning id, name
+`
+
+func (q *Queries) CreateItem(ctx context.Context, name string) (Item, error) {
+	row := q.db.QueryRow(ctx, createItem, name)
+	var i Item
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const createItemAction = `-- name: CreateItemAction :one
+insert into item_actions (name) values ($1) returning id, name
+`
+
+func (q *Queries) CreateItemAction(ctx context.Context, name string) (ItemAction, error) {
+	row := q.db.QueryRow(ctx, createItemAction, name)
+	var i ItemAction
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const createItemInteraction = `-- name: CreateItemInteraction :one
+insert into item_interactions (player_id, team_id, round_id, item_id, item_action, interaction_time, interaction_date) values ($1, $2, $3, $4, $5, $6, $7) returning id, player_id, team_id, round_id, item_id, item_action, interaction_time, interaction_date
+`
+
+type CreateItemInteractionParams struct {
+	PlayerID        pgtype.Int8
+	TeamID          pgtype.Int8
+	RoundID         pgtype.Int8
+	ItemID          pgtype.Int8
+	ItemAction      pgtype.Int8
+	InteractionTime pgtype.Time
+	InteractionDate pgtype.Date
+}
+
+func (q *Queries) CreateItemInteraction(ctx context.Context, arg CreateItemInteractionParams) (ItemInteraction, error) {
+	row := q.db.QueryRow(ctx, createItemInteraction,
+		arg.PlayerID,
+		arg.TeamID,
+		arg.RoundID,
+		arg.ItemID,
+		arg.ItemAction,
+		arg.InteractionTime,
+		arg.InteractionDate,
+	)
+	var i ItemInteraction
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ItemID,
+		&i.ItemAction,
+		&i.InteractionTime,
+		&i.InteractionDate,
+	)
 	return i, err
 }
 
@@ -169,6 +240,100 @@ func (q *Queries) CreateKill(ctx context.Context, arg CreateKillParams) (Kill, e
 	return i, err
 }
 
+const createKillAssisted = `-- name: CreateKillAssisted :one
+insert into kills_assisted (killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id) values ($1, $2, $3, $4, $5, $6, $7) returning id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id
+`
+
+type CreateKillAssistedParams struct {
+	KillerID     pgtype.Int8
+	KilledID     pgtype.Int8
+	RoundID      pgtype.Int8
+	KillTime     pgtype.Time
+	KillDate     pgtype.Date
+	KillerTeamID pgtype.Int8
+	KilledTeamID pgtype.Int8
+}
+
+func (q *Queries) CreateKillAssisted(ctx context.Context, arg CreateKillAssistedParams) (KillsAssisted, error) {
+	row := q.db.QueryRow(ctx, createKillAssisted,
+		arg.KillerID,
+		arg.KilledID,
+		arg.RoundID,
+		arg.KillTime,
+		arg.KillDate,
+		arg.KillerTeamID,
+		arg.KilledTeamID,
+	)
+	var i KillsAssisted
+	err := row.Scan(
+		&i.ID,
+		&i.KillerID,
+		&i.KilledID,
+		&i.RoundID,
+		&i.KillTime,
+		&i.KillDate,
+		&i.KillerTeamID,
+		&i.KilledTeamID,
+	)
+	return i, err
+}
+
+const createKillOther = `-- name: CreateKillOther :one
+insert into kills_other (killer_id, killed_other_id, round_id, kill_time, kill_date, killer_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id, killer_id, killed_other_id, round_id, kill_time, kill_date, killer_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id
+`
+
+type CreateKillOtherParams struct {
+	KillerID        pgtype.Int8
+	KilledOtherID   pgtype.Int8
+	RoundID         pgtype.Int8
+	KillTime        pgtype.Time
+	KillDate        pgtype.Date
+	KillerTeamID    pgtype.Int8
+	KillerPositionX int32
+	KillerPositionY int32
+	KillerPositionZ int32
+	KilledPositionX int32
+	KilledPositionY int32
+	KilledPositionZ int32
+	KillerWeaponID  pgtype.Int8
+}
+
+func (q *Queries) CreateKillOther(ctx context.Context, arg CreateKillOtherParams) (KillsOther, error) {
+	row := q.db.QueryRow(ctx, createKillOther,
+		arg.KillerID,
+		arg.KilledOtherID,
+		arg.RoundID,
+		arg.KillTime,
+		arg.KillDate,
+		arg.KillerTeamID,
+		arg.KillerPositionX,
+		arg.KillerPositionY,
+		arg.KillerPositionZ,
+		arg.KilledPositionX,
+		arg.KilledPositionY,
+		arg.KilledPositionZ,
+		arg.KillerWeaponID,
+	)
+	var i KillsOther
+	err := row.Scan(
+		&i.ID,
+		&i.KillerID,
+		&i.KilledOtherID,
+		&i.RoundID,
+		&i.KillTime,
+		&i.KillDate,
+		&i.KillerTeamID,
+		&i.KillerPositionX,
+		&i.KillerPositionY,
+		&i.KillerPositionZ,
+		&i.KilledPositionX,
+		&i.KilledPositionY,
+		&i.KilledPositionZ,
+		&i.KillerWeaponID,
+	)
+	return i, err
+}
+
 const createMap = `-- name: CreateMap :one
 insert into maps (name) values ($1) returning id, name
 `
@@ -207,6 +372,55 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match
 	return i, err
 }
 
+const createMoneyChange = `-- name: CreateMoneyChange :one
+insert into money_change (player_id, team_id, round_id, item_id, new_total, change_time, change_date) values ($1, $2, $3, $4, $5, $6, $7) returning id, player_id, team_id, round_id, item_id, new_total, change_time, change_date
+`
+
+type CreateMoneyChangeParams struct {
+	PlayerID   pgtype.Int8
+	TeamID     pgtype.Int8
+	RoundID    pgtype.Int8
+	ItemID     pgtype.Int8
+	NewTotal   int32
+	ChangeTime pgtype.Time
+	ChangeDate pgtype.Date
+}
+
+func (q *Queries) CreateMoneyChange(ctx context.Context, arg CreateMoneyChangeParams) (MoneyChange, error) {
+	row := q.db.QueryRow(ctx, createMoneyChange,
+		arg.PlayerID,
+		arg.TeamID,
+		arg.RoundID,
+		arg.ItemID,
+		arg.NewTotal,
+		arg.ChangeTime,
+		arg.ChangeDate,
+	)
+	var i MoneyChange
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ItemID,
+		&i.NewTotal,
+		&i.ChangeTime,
+		&i.ChangeDate,
+	)
+	return i, err
+}
+
+const createOtherKill = `-- name: CreateOtherKill :one
+insert into other_kills (name) values ($1) returning id, name
+`
+
+func (q *Queries) CreateOtherKill(ctx context.Context, name string) (OtherKill, error) {
+	row := q.db.QueryRow(ctx, createOtherKill, name)
+	var i OtherKill
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const createPlayer = `-- name: CreatePlayer :one
 insert into players (steam_user_id, name, bot) values ($1, $2, $3) returning id, steam_user_id, name, bot
 `
@@ -225,6 +439,50 @@ func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) (Pla
 		&i.SteamUserID,
 		&i.Name,
 		&i.Bot,
+	)
+	return i, err
+}
+
+const createPlayerSuicide = `-- name: CreatePlayerSuicide :one
+insert into player_suicide (player_id, round_id, suicide_time, suicide_date, team_id, player_position_x, player_position_y, player_position_z, with_item_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id, player_id, team_id, round_id, with_item_id, player_position_x, player_position_y, player_position_z, suicide_time, suicide_date
+`
+
+type CreatePlayerSuicideParams struct {
+	PlayerID        pgtype.Int8
+	RoundID         pgtype.Int8
+	SuicideTime     pgtype.Time
+	SuicideDate     pgtype.Date
+	TeamID          pgtype.Int8
+	PlayerPositionX int32
+	PlayerPositionY int32
+	PlayerPositionZ int32
+	WithItemID      pgtype.Int8
+}
+
+func (q *Queries) CreatePlayerSuicide(ctx context.Context, arg CreatePlayerSuicideParams) (PlayerSuicide, error) {
+	row := q.db.QueryRow(ctx, createPlayerSuicide,
+		arg.PlayerID,
+		arg.RoundID,
+		arg.SuicideTime,
+		arg.SuicideDate,
+		arg.TeamID,
+		arg.PlayerPositionX,
+		arg.PlayerPositionY,
+		arg.PlayerPositionZ,
+		arg.WithItemID,
+	)
+	var i PlayerSuicide
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.WithItemID,
+		&i.PlayerPositionX,
+		&i.PlayerPositionY,
+		&i.PlayerPositionZ,
+		&i.SuicideTime,
+		&i.SuicideDate,
 	)
 	return i, err
 }
@@ -339,6 +597,41 @@ func (q *Queries) CreateTeamSwitchEvent(ctx context.Context, arg CreateTeamSwitc
 	return err
 }
 
+const createTriggeredEvent = `-- name: CreateTriggeredEvent :one
+insert into triggered_events (player_id, team_id, round_id, event_id, event_time, event_date) values ($1, $2, $3, $4, $5, $6) returning id, player_id, team_id, round_id, event_id, event_time, event_date
+`
+
+type CreateTriggeredEventParams struct {
+	PlayerID  pgtype.Int8
+	TeamID    pgtype.Int8
+	RoundID   pgtype.Int8
+	EventID   pgtype.Int8
+	EventTime pgtype.Time
+	EventDate pgtype.Date
+}
+
+func (q *Queries) CreateTriggeredEvent(ctx context.Context, arg CreateTriggeredEventParams) (TriggeredEvent, error) {
+	row := q.db.QueryRow(ctx, createTriggeredEvent,
+		arg.PlayerID,
+		arg.TeamID,
+		arg.RoundID,
+		arg.EventID,
+		arg.EventTime,
+		arg.EventDate,
+	)
+	var i TriggeredEvent
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.EventID,
+		&i.EventTime,
+		&i.EventDate,
+	)
+	return i, err
+}
+
 const createWeapon = `-- name: CreateWeapon :one
 insert into weapons (name) values ($1) returning id, name
 `
@@ -355,7 +648,9 @@ const getAttack = `-- name: GetAttack :one
 select id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position_x, attacker_position_y, attacker_position_z, attacked_position_x, attacked_position_y, attacked_position_z, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id from attacks where id = $1 limit 1
 `
 
+// --------------------
 // Attacks
+// --------------------
 func (q *Queries) GetAttack(ctx context.Context, id int64) (Attack, error) {
 	row := q.db.QueryRow(ctx, getAttack, id)
 	var i Attack
@@ -430,12 +725,40 @@ func (q *Queries) GetAttackByAttackerAttackedRoundDateTime(ctx context.Context, 
 	return i, err
 }
 
+const getEvent = `-- name: GetEvent :one
+
+select id, name from events where id = $1 limit 1
+`
+
+// --------------------
+// Events
+// --------------------
+func (q *Queries) GetEvent(ctx context.Context, id int64) (Event, error) {
+	row := q.db.QueryRow(ctx, getEvent, id)
+	var i Event
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getEventByName = `-- name: GetEventByName :one
+select id, name from events where name = $1 limit 1
+`
+
+func (q *Queries) GetEventByName(ctx context.Context, name string) (Event, error) {
+	row := q.db.QueryRow(ctx, getEventByName, name)
+	var i Event
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getGameType = `-- name: GetGameType :one
 
 select id, name from game_types where id = $1 limit 1
 `
 
+// --------------------
 // Game Type
+// --------------------
 func (q *Queries) GetGameType(ctx context.Context, id int64) (GameType, error) {
 	row := q.db.QueryRow(ctx, getGameType, id)
 	var i GameType
@@ -459,7 +782,9 @@ const getHitGroup = `-- name: GetHitGroup :one
 select id, name from hit_groups where id = $1 limit 1
 `
 
+// --------------------
 // Hit Groups
+// --------------------
 func (q *Queries) GetHitGroup(ctx context.Context, id int64) (HitGroup, error) {
 	row := q.db.QueryRow(ctx, getHitGroup, id)
 	var i HitGroup
@@ -478,12 +803,126 @@ func (q *Queries) GetHitGroupByName(ctx context.Context, name string) (HitGroup,
 	return i, err
 }
 
+const getItem = `-- name: GetItem :one
+
+select id, name from items where id = $1 limit 1
+`
+
+// --------------------
+// Items
+// --------------------
+func (q *Queries) GetItem(ctx context.Context, id int64) (Item, error) {
+	row := q.db.QueryRow(ctx, getItem, id)
+	var i Item
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getItemAction = `-- name: GetItemAction :one
+
+select id, name from item_actions where id = $1 limit 1
+`
+
+// --------------------
+// Item Actions
+// --------------------
+func (q *Queries) GetItemAction(ctx context.Context, id int64) (ItemAction, error) {
+	row := q.db.QueryRow(ctx, getItemAction, id)
+	var i ItemAction
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getItemActionByName = `-- name: GetItemActionByName :one
+select id, name from item_actions where name = $1 limit 1
+`
+
+func (q *Queries) GetItemActionByName(ctx context.Context, name string) (ItemAction, error) {
+	row := q.db.QueryRow(ctx, getItemActionByName, name)
+	var i ItemAction
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getItemByName = `-- name: GetItemByName :one
+select id, name from items where name = $1 limit 1
+`
+
+func (q *Queries) GetItemByName(ctx context.Context, name string) (Item, error) {
+	row := q.db.QueryRow(ctx, getItemByName, name)
+	var i Item
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getItemInteraction = `-- name: GetItemInteraction :one
+
+select id, player_id, team_id, round_id, item_id, item_action, interaction_time, interaction_date from item_interactions where id = $1 limit 1
+`
+
+// --------------------
+// Item Interactions
+// --------------------
+func (q *Queries) GetItemInteraction(ctx context.Context, id int64) (ItemInteraction, error) {
+	row := q.db.QueryRow(ctx, getItemInteraction, id)
+	var i ItemInteraction
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ItemID,
+		&i.ItemAction,
+		&i.InteractionTime,
+		&i.InteractionDate,
+	)
+	return i, err
+}
+
+const getItemInteractionByPlayerItemInteractionRoundDateTime = `-- name: GetItemInteractionByPlayerItemInteractionRoundDateTime :one
+select id, player_id, team_id, round_id, item_id, item_action, interaction_time, interaction_date from item_interactions where player_id = $1 and item_id = $2 and item_action = $3 and round_id = $4 and interaction_date = $5 and interaction_time = $6 limit 1
+`
+
+type GetItemInteractionByPlayerItemInteractionRoundDateTimeParams struct {
+	PlayerID        pgtype.Int8
+	ItemID          pgtype.Int8
+	ItemAction      pgtype.Int8
+	RoundID         pgtype.Int8
+	InteractionDate pgtype.Date
+	InteractionTime pgtype.Time
+}
+
+func (q *Queries) GetItemInteractionByPlayerItemInteractionRoundDateTime(ctx context.Context, arg GetItemInteractionByPlayerItemInteractionRoundDateTimeParams) (ItemInteraction, error) {
+	row := q.db.QueryRow(ctx, getItemInteractionByPlayerItemInteractionRoundDateTime,
+		arg.PlayerID,
+		arg.ItemID,
+		arg.ItemAction,
+		arg.RoundID,
+		arg.InteractionDate,
+		arg.InteractionTime,
+	)
+	var i ItemInteraction
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ItemID,
+		&i.ItemAction,
+		&i.InteractionTime,
+		&i.InteractionDate,
+	)
+	return i, err
+}
+
 const getKill = `-- name: GetKill :one
 
 select id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id, special_id from kills where id = $1 limit 1
 `
 
+// --------------------
 // Kills
+// --------------------
 func (q *Queries) GetKill(ctx context.Context, id int64) (Kill, error) {
 	row := q.db.QueryRow(ctx, getKill, id)
 	var i Kill
@@ -504,6 +943,64 @@ func (q *Queries) GetKill(ctx context.Context, id int64) (Kill, error) {
 		&i.KilledPositionZ,
 		&i.KillerWeaponID,
 		&i.SpecialID,
+	)
+	return i, err
+}
+
+const getKillAssisted = `-- name: GetKillAssisted :one
+
+select id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id from kills_assisted where id = $1 limit 1
+`
+
+// --------------------
+// Kills Assisted
+// --------------------
+func (q *Queries) GetKillAssisted(ctx context.Context, id int64) (KillsAssisted, error) {
+	row := q.db.QueryRow(ctx, getKillAssisted, id)
+	var i KillsAssisted
+	err := row.Scan(
+		&i.ID,
+		&i.KillerID,
+		&i.KilledID,
+		&i.RoundID,
+		&i.KillTime,
+		&i.KillDate,
+		&i.KillerTeamID,
+		&i.KilledTeamID,
+	)
+	return i, err
+}
+
+const getKillAssistedByKillerKilledRoundDateTime = `-- name: GetKillAssistedByKillerKilledRoundDateTime :one
+select id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id from kills_assisted where killer_id = $1 and killed_id = $2 and round_id = $3 and kill_date = $4 and kill_time = $5 limit 1
+`
+
+type GetKillAssistedByKillerKilledRoundDateTimeParams struct {
+	KillerID pgtype.Int8
+	KilledID pgtype.Int8
+	RoundID  pgtype.Int8
+	KillDate pgtype.Date
+	KillTime pgtype.Time
+}
+
+func (q *Queries) GetKillAssistedByKillerKilledRoundDateTime(ctx context.Context, arg GetKillAssistedByKillerKilledRoundDateTimeParams) (KillsAssisted, error) {
+	row := q.db.QueryRow(ctx, getKillAssistedByKillerKilledRoundDateTime,
+		arg.KillerID,
+		arg.KilledID,
+		arg.RoundID,
+		arg.KillDate,
+		arg.KillTime,
+	)
+	var i KillsAssisted
+	err := row.Scan(
+		&i.ID,
+		&i.KillerID,
+		&i.KilledID,
+		&i.RoundID,
+		&i.KillTime,
+		&i.KillDate,
+		&i.KillerTeamID,
+		&i.KilledTeamID,
 	)
 	return i, err
 }
@@ -550,12 +1047,84 @@ func (q *Queries) GetKillByKillerKilledRoundDateTime(ctx context.Context, arg Ge
 	return i, err
 }
 
+const getKillOther = `-- name: GetKillOther :one
+
+select id, killer_id, killed_other_id, round_id, kill_time, kill_date, killer_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id from kills_other where id = $1 limit 1
+`
+
+// --------------------
+// Killed Other
+// --------------------
+func (q *Queries) GetKillOther(ctx context.Context, id int64) (KillsOther, error) {
+	row := q.db.QueryRow(ctx, getKillOther, id)
+	var i KillsOther
+	err := row.Scan(
+		&i.ID,
+		&i.KillerID,
+		&i.KilledOtherID,
+		&i.RoundID,
+		&i.KillTime,
+		&i.KillDate,
+		&i.KillerTeamID,
+		&i.KillerPositionX,
+		&i.KillerPositionY,
+		&i.KillerPositionZ,
+		&i.KilledPositionX,
+		&i.KilledPositionY,
+		&i.KilledPositionZ,
+		&i.KillerWeaponID,
+	)
+	return i, err
+}
+
+const getKillOtherByKillerOtherRoundDateTime = `-- name: GetKillOtherByKillerOtherRoundDateTime :one
+select id, killer_id, killed_other_id, round_id, kill_time, kill_date, killer_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id from kills_other where killer_id = $1 and killed_other_id = $2 and round_id = $3 and kill_date = $4 and kill_time = $5 limit 1
+`
+
+type GetKillOtherByKillerOtherRoundDateTimeParams struct {
+	KillerID      pgtype.Int8
+	KilledOtherID pgtype.Int8
+	RoundID       pgtype.Int8
+	KillDate      pgtype.Date
+	KillTime      pgtype.Time
+}
+
+func (q *Queries) GetKillOtherByKillerOtherRoundDateTime(ctx context.Context, arg GetKillOtherByKillerOtherRoundDateTimeParams) (KillsOther, error) {
+	row := q.db.QueryRow(ctx, getKillOtherByKillerOtherRoundDateTime,
+		arg.KillerID,
+		arg.KilledOtherID,
+		arg.RoundID,
+		arg.KillDate,
+		arg.KillTime,
+	)
+	var i KillsOther
+	err := row.Scan(
+		&i.ID,
+		&i.KillerID,
+		&i.KilledOtherID,
+		&i.RoundID,
+		&i.KillTime,
+		&i.KillDate,
+		&i.KillerTeamID,
+		&i.KillerPositionX,
+		&i.KillerPositionY,
+		&i.KillerPositionZ,
+		&i.KilledPositionX,
+		&i.KilledPositionY,
+		&i.KilledPositionZ,
+		&i.KillerWeaponID,
+	)
+	return i, err
+}
+
 const getMap = `-- name: GetMap :one
 
 select id, name from maps where id = $1 limit 1
 `
 
+// --------------------
 // Maps
+// --------------------
 func (q *Queries) GetMap(ctx context.Context, id int64) (Map, error) {
 	row := q.db.QueryRow(ctx, getMap, id)
 	var i Map
@@ -579,7 +1148,9 @@ const getMatch = `-- name: GetMatch :one
 select id, start_date, start_time, end_date, end_time, map_id, score_ct, score_t, game_type_id from matches where id = $1 limit 1
 `
 
+// --------------------
 // Matches
+// --------------------
 func (q *Queries) GetMatch(ctx context.Context, id int64) (Match, error) {
 	row := q.db.QueryRow(ctx, getMatch, id)
 	var i Match
@@ -624,12 +1195,98 @@ func (q *Queries) GetMatchByMapAndStartDateTime(ctx context.Context, arg GetMatc
 	return i, err
 }
 
+const getMoneyChange = `-- name: GetMoneyChange :one
+
+select id, player_id, team_id, round_id, item_id, new_total, change_time, change_date from money_change where id = $1 limit 1
+`
+
+// --------------------
+// Money Change
+// --------------------
+func (q *Queries) GetMoneyChange(ctx context.Context, id int64) (MoneyChange, error) {
+	row := q.db.QueryRow(ctx, getMoneyChange, id)
+	var i MoneyChange
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ItemID,
+		&i.NewTotal,
+		&i.ChangeTime,
+		&i.ChangeDate,
+	)
+	return i, err
+}
+
+const getMoneyChangeByPlayerNewTotalRoundDateTime = `-- name: GetMoneyChangeByPlayerNewTotalRoundDateTime :one
+select id, player_id, team_id, round_id, item_id, new_total, change_time, change_date from money_change where player_id = $1 and new_total = $2 and round_id = $3 and change_date = $4 and change_time = $5 limit 1
+`
+
+type GetMoneyChangeByPlayerNewTotalRoundDateTimeParams struct {
+	PlayerID   pgtype.Int8
+	NewTotal   int32
+	RoundID    pgtype.Int8
+	ChangeDate pgtype.Date
+	ChangeTime pgtype.Time
+}
+
+func (q *Queries) GetMoneyChangeByPlayerNewTotalRoundDateTime(ctx context.Context, arg GetMoneyChangeByPlayerNewTotalRoundDateTimeParams) (MoneyChange, error) {
+	row := q.db.QueryRow(ctx, getMoneyChangeByPlayerNewTotalRoundDateTime,
+		arg.PlayerID,
+		arg.NewTotal,
+		arg.RoundID,
+		arg.ChangeDate,
+		arg.ChangeTime,
+	)
+	var i MoneyChange
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ItemID,
+		&i.NewTotal,
+		&i.ChangeTime,
+		&i.ChangeDate,
+	)
+	return i, err
+}
+
+const getOtherKill = `-- name: GetOtherKill :one
+
+select id, name from other_kills where id = $1 limit 1
+`
+
+// --------------------
+// Other Kills
+// --------------------
+func (q *Queries) GetOtherKill(ctx context.Context, id int64) (OtherKill, error) {
+	row := q.db.QueryRow(ctx, getOtherKill, id)
+	var i OtherKill
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getOtherKillByName = `-- name: GetOtherKillByName :one
+select id, name from other_kills where name = $1 limit 1
+`
+
+func (q *Queries) GetOtherKillByName(ctx context.Context, name string) (OtherKill, error) {
+	row := q.db.QueryRow(ctx, getOtherKillByName, name)
+	var i OtherKill
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getPlayer = `-- name: GetPlayer :one
 
 select id, steam_user_id, name, bot from players where id = $1 limit 1
 `
 
+// --------------------
 // Players
+// --------------------
 func (q *Queries) GetPlayer(ctx context.Context, id int64) (Player, error) {
 	row := q.db.QueryRow(ctx, getPlayer, id)
 	var i Player
@@ -658,12 +1315,76 @@ func (q *Queries) GetPlayerByName(ctx context.Context, name string) (Player, err
 	return i, err
 }
 
+const getPlayerSuicide = `-- name: GetPlayerSuicide :one
+
+select id, player_id, team_id, round_id, with_item_id, player_position_x, player_position_y, player_position_z, suicide_time, suicide_date from player_suicide where id = $1 limit 1
+`
+
+// --------------------
+// Player Suicide
+// --------------------
+func (q *Queries) GetPlayerSuicide(ctx context.Context, id int64) (PlayerSuicide, error) {
+	row := q.db.QueryRow(ctx, getPlayerSuicide, id)
+	var i PlayerSuicide
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.WithItemID,
+		&i.PlayerPositionX,
+		&i.PlayerPositionY,
+		&i.PlayerPositionZ,
+		&i.SuicideTime,
+		&i.SuicideDate,
+	)
+	return i, err
+}
+
+const getPlayerSuicideByPlayerItemRoundDateTime = `-- name: GetPlayerSuicideByPlayerItemRoundDateTime :one
+select id, player_id, team_id, round_id, with_item_id, player_position_x, player_position_y, player_position_z, suicide_time, suicide_date from player_suicide where player_id = $1 and with_item_id = $2 and round_id = $3 and suicide_date = $4 and suicide_time = $5 limit 1
+`
+
+type GetPlayerSuicideByPlayerItemRoundDateTimeParams struct {
+	PlayerID    pgtype.Int8
+	WithItemID  pgtype.Int8
+	RoundID     pgtype.Int8
+	SuicideDate pgtype.Date
+	SuicideTime pgtype.Time
+}
+
+func (q *Queries) GetPlayerSuicideByPlayerItemRoundDateTime(ctx context.Context, arg GetPlayerSuicideByPlayerItemRoundDateTimeParams) (PlayerSuicide, error) {
+	row := q.db.QueryRow(ctx, getPlayerSuicideByPlayerItemRoundDateTime,
+		arg.PlayerID,
+		arg.WithItemID,
+		arg.RoundID,
+		arg.SuicideDate,
+		arg.SuicideTime,
+	)
+	var i PlayerSuicide
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.WithItemID,
+		&i.PlayerPositionX,
+		&i.PlayerPositionY,
+		&i.PlayerPositionZ,
+		&i.SuicideTime,
+		&i.SuicideDate,
+	)
+	return i, err
+}
+
 const getRound = `-- name: GetRound :one
 
 select id, start_date, start_time, end_date, end_time, match_id, winner_team_id from rounds where id = $1 limit 1
 `
 
+// --------------------
 // Rounds
+// --------------------
 func (q *Queries) GetRound(ctx context.Context, id int64) (Round, error) {
 	row := q.db.QueryRow(ctx, getRound, id)
 	var i Round
@@ -708,7 +1429,9 @@ const getRoundTeamEntry = `-- name: GetRoundTeamEntry :one
 select id, player_id, team_id, round_id from round_teams where id = $1 limit 1
 `
 
+// --------------------
 // Round Teams
+// --------------------
 func (q *Queries) GetRoundTeamEntry(ctx context.Context, id int64) (RoundTeam, error) {
 	row := q.db.QueryRow(ctx, getRoundTeamEntry, id)
 	var i RoundTeam
@@ -748,7 +1471,9 @@ const getSpecialKill = `-- name: GetSpecialKill :one
 select id, name from special_kills where id = $1 limit 1
 `
 
+// --------------------
 // Special Kills
+// --------------------
 func (q *Queries) GetSpecialKill(ctx context.Context, id int64) (SpecialKill, error) {
 	row := q.db.QueryRow(ctx, getSpecialKill, id)
 	var i SpecialKill
@@ -772,7 +1497,9 @@ const getSteamUser = `-- name: GetSteamUser :one
 select id, steam_id, steam_community_id from steam_users where id = $1 limit 1
 `
 
+// --------------------
 // Steam User
+// --------------------
 func (q *Queries) GetSteamUser(ctx context.Context, id int64) (SteamUser, error) {
 	row := q.db.QueryRow(ctx, getSteamUser, id)
 	var i SteamUser
@@ -796,7 +1523,9 @@ const getTeam = `-- name: GetTeam :one
 select id, name from teams where id = $1 limit 1
 `
 
+// --------------------
 // Teams
+// --------------------
 func (q *Queries) GetTeam(ctx context.Context, id int64) (Team, error) {
 	row := q.db.QueryRow(ctx, getTeam, id)
 	var i Team
@@ -815,8 +1544,30 @@ func (q *Queries) GetTeamByName(ctx context.Context, name string) (Team, error) 
 	return i, err
 }
 
-const getTeamSwitchByPlayerAndDateTime = `-- name: GetTeamSwitchByPlayerAndDateTime :one
+const getTeamSwitch = `-- name: GetTeamSwitch :one
 
+select id, player_id, from_team_id, to_team_id, switch_date, switch_time, round_id from team_switch where id = $1 limit 1
+`
+
+// --------------------
+// Team Switch
+// --------------------
+func (q *Queries) GetTeamSwitch(ctx context.Context, id int64) (TeamSwitch, error) {
+	row := q.db.QueryRow(ctx, getTeamSwitch, id)
+	var i TeamSwitch
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.FromTeamID,
+		&i.ToTeamID,
+		&i.SwitchDate,
+		&i.SwitchTime,
+		&i.RoundID,
+	)
+	return i, err
+}
+
+const getTeamSwitchByPlayerAndDateTime = `-- name: GetTeamSwitchByPlayerAndDateTime :one
 select id, player_id, from_team_id, to_team_id, switch_date, switch_time, round_id from team_switch where player_id = $1 and switch_date = $2 and switch_time = $3 limit 1
 `
 
@@ -826,7 +1577,6 @@ type GetTeamSwitchByPlayerAndDateTimeParams struct {
 	SwitchTime pgtype.Time
 }
 
-// Team Switch
 func (q *Queries) GetTeamSwitchByPlayerAndDateTime(ctx context.Context, arg GetTeamSwitchByPlayerAndDateTimeParams) (TeamSwitch, error) {
 	row := q.db.QueryRow(ctx, getTeamSwitchByPlayerAndDateTime, arg.PlayerID, arg.SwitchDate, arg.SwitchTime)
 	var i TeamSwitch
@@ -842,12 +1592,70 @@ func (q *Queries) GetTeamSwitchByPlayerAndDateTime(ctx context.Context, arg GetT
 	return i, err
 }
 
+const getTriggeredEvent = `-- name: GetTriggeredEvent :one
+
+select id, player_id, team_id, round_id, event_id, event_time, event_date from triggered_events where id = $1 limit 1
+`
+
+// --------------------
+// Triggered Events
+// --------------------
+func (q *Queries) GetTriggeredEvent(ctx context.Context, id int64) (TriggeredEvent, error) {
+	row := q.db.QueryRow(ctx, getTriggeredEvent, id)
+	var i TriggeredEvent
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.EventID,
+		&i.EventTime,
+		&i.EventDate,
+	)
+	return i, err
+}
+
+const getTriggeredEventByPlayerEventRoundDateTime = `-- name: GetTriggeredEventByPlayerEventRoundDateTime :one
+select id, player_id, team_id, round_id, event_id, event_time, event_date from triggered_events where player_id = $1 and event_id = $2 and round_id = $3 and event_date = $4 and event_time = $5 limit 1
+`
+
+type GetTriggeredEventByPlayerEventRoundDateTimeParams struct {
+	PlayerID  pgtype.Int8
+	EventID   pgtype.Int8
+	RoundID   pgtype.Int8
+	EventDate pgtype.Date
+	EventTime pgtype.Time
+}
+
+func (q *Queries) GetTriggeredEventByPlayerEventRoundDateTime(ctx context.Context, arg GetTriggeredEventByPlayerEventRoundDateTimeParams) (TriggeredEvent, error) {
+	row := q.db.QueryRow(ctx, getTriggeredEventByPlayerEventRoundDateTime,
+		arg.PlayerID,
+		arg.EventID,
+		arg.RoundID,
+		arg.EventDate,
+		arg.EventTime,
+	)
+	var i TriggeredEvent
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.EventID,
+		&i.EventTime,
+		&i.EventDate,
+	)
+	return i, err
+}
+
 const getWeapon = `-- name: GetWeapon :one
 
 select id, name from weapons where id = $1 limit 1
 `
 
+// --------------------
 // Weapons
+// --------------------
 func (q *Queries) GetWeapon(ctx context.Context, id int64) (Weapon, error) {
 	row := q.db.QueryRow(ctx, getWeapon, id)
 	var i Weapon

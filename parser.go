@@ -30,7 +30,7 @@ func initializeRegexpPatterns() map[string]*regexp.Regexp {
 	re["threw"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<playerSteamId>BOT|STEAM[^>]+)><(?P<playerTeam>CT|TERRORIST)>" threw (?P<object>\S+) \[(?P<playerX>-?\d+) (?P<playerY>-?\d+) (?P<playerZ>-?\d+)]( flashbang entindex \d+)?$`)
 	re["blinded"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<blindedName>[^<]+)<\d+><(?P<blindedSteamId>BOT|STEAM[^>]+)><(?P<blindedTeam>CT|TERRORIST)>" blinded for (?P<blindedTime>\S+) by "(?P<byName>[^<]+)<\d+><(?P<bySteamId>BOT|STEAM[^>]+)><(?P<byTeam>CT|TERRORIST)>" from flashbang entindex \d+$`)
 	re["shopping"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" (?P<type>dropped|purchased|picked up) "(?P<item>[^"])"$`)
-	re["moneyChange"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" money change [^=]= \$(?P<newTotal>\d+) \(tracked\)\s?\(?[^:]*:?\s?(?P<item>[^)]*)\)?$`)
+	re["moneyChange"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" money change [^=]+= \$(?P<newTotal>\d+) \(tracked\)\s?\(?[^:]*:?\s?(?P<item>[^)]*)\)?$`)
 	re["leftBuyZone"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" left buyzone with \[(?P<items>[^]])]$`)
 	re["attacking"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<attackerName>[^<]+)<\d+><(?P<attackerSteamId>BOT|STEAM[^>]+)><(?P<attackerTeam>CT|TERRORIST)>" \[(?P<attackerX>-?\d+) (?P<attackerY>-?\d+) (?P<attackerZ>-?\d+)] attacked "(?P<attackedName>[^<]+)<\d+><(?P<attackedSteamId>BOT|STEAM[^>]+)><(?P<attackedTeam>CT|TERRORIST)>" \[(?P<attackedX>-?\d+) (?P<attackedY>-?\d+) (?P<attackedZ>-?\d+)] with "(?P<weapon>[^"]+)" \(damage "(?P<damage>\d+)"\) \(damage_armor "(?P<damageArmor>\d+)"\) \(health "(?P<health>\d+)"\) \(armor "(?P<armor>\d+)"\) \(hitgroup "(?P<hitgroup>[^"]+)"\)$`)
 	re["suicide"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" \[(?P<suicideX>-?\d+) (?P<suicideY>-?\d+) (?P<suicideZ>-?\d+)] committed suicide with "(?P<item>[^"]+)"$`)
@@ -156,6 +156,9 @@ func parseFile(r io.Reader, re map[string]*regexp.Regexp) error {
 						log.Println("error parsing tScore: ", err)
 					}
 					err = handleGameOver(ctx, conn, currentMatch.ID, matches[dateIdx], matches[timeIdx], int32(ctScore), int32(tScore), matches[gameTypeIdx])
+					if err != nil {
+						log.Println("error handling gameOver: ", err)
+					}
 				case "switchTeam":
 					matches := rgx.FindStringSubmatch(line)
 					dateIdx := rgx.SubexpIndex("date")
@@ -191,24 +194,112 @@ func parseFile(r io.Reader, re map[string]*regexp.Regexp) error {
 					armorIdx := rgx.SubexpIndex("armor")
 					hitgroupIdx := rgx.SubexpIndex("hitgroup")
 					err = handleAttacking(ctx, conn, matches[dateIdx], matches[timeIdx], matches[attackerNameIdx], matches[attackerSteamIdIdx], matches[attackerTeamIdx], matches[attackerXIdx], matches[attackerYIdx], matches[attackerZIdx], matches[attackedNameIdx], matches[attackedSteamIdIdx], matches[attackedTeamIdx], matches[attackedXIdx], matches[attackedYIdx], matches[attackedZIdx], matches[weaponIdx], matches[damageIdx], matches[damageArmorIdx], matches[healthIdx], matches[armorIdx], matches[hitgroupIdx], currentRound.ID)
+					if err != nil {
+						log.Println("error handling attacking: ", err)
+					}
 				case "killed":
-					fmt.Println("killed")
+					matches := rgx.FindStringSubmatch(line)
+					dateIdx := rgx.SubexpIndex("date")
+					timeIdx := rgx.SubexpIndex("time")
+					killerNameIdx := rgx.SubexpIndex("killerName")
+					killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
+					killerTeamIdx := rgx.SubexpIndex("killerTeam")
+					killerXIdx := rgx.SubexpIndex("killerX")
+					killerYIdx := rgx.SubexpIndex("killerY")
+					killerZIdx := rgx.SubexpIndex("killerZ")
+					killedNameIdx := rgx.SubexpIndex("killedName")
+					killedSteamIdIdx := rgx.SubexpIndex("killedSteamId")
+					killedTeamIdx := rgx.SubexpIndex("killedTeam")
+					killedXIdx := rgx.SubexpIndex("killedX")
+					killedYIdx := rgx.SubexpIndex("killedY")
+					killedZIdx := rgx.SubexpIndex("killedZ")
+					killerWeaponIdx := rgx.SubexpIndex("killerWeapon")
+					special := rgx.SubexpIndex("special")
+					err = handleKilled(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killerXIdx], matches[killerYIdx], matches[killerZIdx], matches[killedNameIdx], matches[killedSteamIdIdx], matches[killedTeamIdx], matches[killedXIdx], matches[killedYIdx], matches[killedZIdx], matches[killerWeaponIdx], matches[special], currentRound.ID)
+					if err != nil {
+						log.Println("error handling killed: ", err)
+					}
+				case "killedOther":
+					matches := rgx.FindStringSubmatch(line)
+					dateIdx := rgx.SubexpIndex("date")
+					timeIdx := rgx.SubexpIndex("time")
+					killerNameIdx := rgx.SubexpIndex("killerName")
+					killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
+					killerTeamIdx := rgx.SubexpIndex("killerTeam")
+					killerXIdx := rgx.SubexpIndex("killerX")
+					killerYIdx := rgx.SubexpIndex("killerY")
+					killerZIdx := rgx.SubexpIndex("killerZ")
+					killedNameIdx := rgx.SubexpIndex("killedName")
+					killedXIdx := rgx.SubexpIndex("killedX")
+					killedYIdx := rgx.SubexpIndex("killedY")
+					killedZIdx := rgx.SubexpIndex("killedZ")
+					killerWeaponIdx := rgx.SubexpIndex("killerWeapon")
+					err = handleKilledOther(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killerXIdx], matches[killerYIdx], matches[killerZIdx], matches[killedNameIdx], matches[killedXIdx], matches[killedYIdx], matches[killedZIdx], matches[killerWeaponIdx], currentRound.ID)
+					if err != nil {
+						log.Println("error handling killed other: ", err)
+					}
 				case "assistedKill":
-					fmt.Println("assistedKill")
+					matches := rgx.FindStringSubmatch(line)
+					dateIdx := rgx.SubexpIndex("date")
+					timeIdx := rgx.SubexpIndex("time")
+					killerNameIdx := rgx.SubexpIndex("killerName")
+					killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
+					killerTeamIdx := rgx.SubexpIndex("killerTeam")
+					killedNameIdx := rgx.SubexpIndex("killedName")
+					killedSteamIdIdx := rgx.SubexpIndex("killedSteamId")
+					killedTeamIdx := rgx.SubexpIndex("killedTeam")
+					err = handleAssistedKill(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killedNameIdx], matches[killedSteamIdIdx], matches[killedTeamIdx], currentRound.ID)
+					if err != nil {
+						log.Println("error handling assisted kill: ", err)
+					}
 				case "shopping":
-					fmt.Println("shopping")
+					matches := rgx.FindStringSubmatch(line)
+					dateIdx := rgx.SubexpIndex("date")
+					timeIdx := rgx.SubexpIndex("time")
+					playerNameIdx := rgx.SubexpIndex("playerName")
+					steamIdIdx := rgx.SubexpIndex("steamId")
+					currentTeamIdx := rgx.SubexpIndex("currentTeam")
+					typeIdx := rgx.SubexpIndex("type")
+					itemIdx := rgx.SubexpIndex("item")
+					err = handleItemInteraction(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[currentTeamIdx], matches[typeIdx], matches[itemIdx], currentRound.ID)
+					if err != nil {
+						log.Println("error handling item interaction: ", err)
+					}
 				case "moneyChange":
-					fmt.Println("moneyChange")
-				case "leftBuyZone":
-					fmt.Println("leftBuyZone")
+					matches := rgx.FindStringSubmatch(line)
+					dateIdx := rgx.SubexpIndex("date")
+					timeIdx := rgx.SubexpIndex("time")
+					playerNameIdx := rgx.SubexpIndex("playerName")
+					steamIdIdx := rgx.SubexpIndex("steamId")
+					currentTeamIdx := rgx.SubexpIndex("currentTeam")
+					newTotalIdx := rgx.SubexpIndex("newTotal")
+					itemIdx := rgx.SubexpIndex("item")
+					err = handleMoneyChange(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[currentTeamIdx], matches[newTotalIdx], matches[itemIdx], currentRound.ID)
+					if err != nil {
+						log.Println("error handling money change: ", err)
+					}
 				case "suicide":
+					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" \[(?P<suicideX>-?\d+) (?P<suicideY>-?\d+) (?P<suicideZ>-?\d+)] committed suicide with "(?P<item>[^"]+)"$`)
 					fmt.Println("suicide")
-				case "disconnected":
-					fmt.Println("disconnected")
-				case "accolade":
-					fmt.Println("accolade")
 				case "triggered":
+					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" triggered "(?P<event>[^"]+)"$`)
 					fmt.Println("triggered")
+				case "threw":
+					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<playerSteamId>BOT|STEAM[^>]+)><(?P<playerTeam>CT|TERRORIST)>" threw (?P<object>\S+) \[(?P<playerX>-?\d+) (?P<playerY>-?\d+) (?P<playerZ>-?\d+)]( flashbang entindex \d+)?$`)
+					// L 10/25/2022 - 19:18:34: "Kronborg<48><STEAM_1:1:54462286><CT>" threw hegrenade [-1773 -42 54]
+					fmt.Println("threw")
+				case "blinded":
+					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<blindedName>[^<]+)<\d+><(?P<blindedSteamId>BOT|STEAM[^>]+)><(?P<blindedTeam>CT|TERRORIST)>" blinded for (?P<blindedTime>\S+) by "(?P<byName>[^<]+)<\d+><(?P<bySteamId>BOT|STEAM[^>]+)><(?P<byTeam>CT|TERRORIST)>" from flashbang entindex \d+$`)
+					fmt.Println("blinded")
+				case "leftBuyZone":
+					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" left buyzone with \[(?P<items>[^]])]$`)
+					fmt.Println("leftBuyZone")
+				case "accolade":
+					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): ACCOLADE, FINAL: \{(?P<name>\w+)},\s+(?P<playerName>[^<]+)<\d+>,\s+VALUE: (?P<value>\d+\.\d+),\s+POS:\s+(?P<position>[^,]+),\s+SCORE: (?P<score>\d+\.\d+)$`)
+					fmt.Println("accolade")
+				case "disconnected":
+					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" disconnected \(reason "(?P<reason>[^"]+)"\)$`)
+					fmt.Println("disconnected")
 				default:
 					fmt.Println("No match found for line: ", line)
 				}
@@ -264,6 +355,86 @@ func getHitgroupID(ctx context.Context, conn *pgx.Conn, hitgroupName string) (in
 		}
 	}
 	return hitgroup.ID, nil
+}
+
+func getSpecialKill(ctx context.Context, conn *pgx.Conn, specialKillName string) (int64, error) {
+	queries := database.New(conn)
+	specialKill, err := queries.GetSpecialKillByName(ctx, specialKillName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			specialKill, err = queries.CreateSpecialKill(ctx, specialKillName)
+			if err != nil {
+				return 0, err
+			}
+		} else {
+			return 0, err
+		}
+	}
+	return specialKill.ID, nil
+}
+
+func getOtherKillID(ctx context.Context, conn *pgx.Conn, name string) (int64, error) {
+	queries := database.New(conn)
+	otherKill, err := queries.GetOtherKillByName(ctx, name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			otherKill, err = queries.CreateOtherKill(ctx, name)
+			if err != nil {
+				return 0, err
+			}
+		} else {
+			return 0, err
+		}
+	}
+	return otherKill.ID, nil
+}
+
+func getItemID(ctx context.Context, conn *pgx.Conn, name string) (int64, error) {
+	queries := database.New(conn)
+	item, err := queries.GetItemByName(ctx, name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			item, err = queries.CreateItem(ctx, name)
+			if err != nil {
+				return 0, err
+			}
+		} else {
+			return 0, err
+		}
+	}
+	return item.ID, nil
+}
+
+func getItemActionID(ctx context.Context, conn *pgx.Conn, name string) (int64, error) {
+	queries := database.New(conn)
+	itemAction, err := queries.GetItemActionByName(ctx, name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			itemAction, err = queries.CreateItemAction(ctx, name)
+			if err != nil {
+				return 0, err
+			}
+		} else {
+			return 0, err
+		}
+	}
+	return itemAction.ID, nil
+}
+
+func getEventID(ctx context.Context, conn *pgx.Conn, name string) (int64, error) {
+	queries := database.New(conn)
+	event, err := queries.GetEventByName(ctx, name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			event, err = queries.CreateEvent(ctx, name)
+			if err != nil {
+				return 0, err
+			}
+		} else {
+			return 0, err
+		}
+	}
+	return event.ID, nil
 }
 
 func handleRoundStart(ctx context.Context, conn *pgx.Conn, matchId int64, dateStr string, timeStr string) (database.Round, error) {
@@ -661,8 +832,616 @@ func handleAttacking(ctx context.Context, conn *pgx.Conn, dateStr string, timeSt
 				Armor:             int32(armorInt),
 				HitGroupID:        pgtype.Int8{Int64: hitgroupId, Valid: true},
 			})
-			if err != nil {
+			if err16 != nil {
 				return err16
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleKilled(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, killerName string, killerSteamId string, killerTeam string, killerX string, killerY string, killerZ string, killedName string, killedSteamId string, killedTeam string, killedX string, killedY string, killedZ string, killerWeapon string, special string, roundId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	killerSteamUser, err := queries.GetSteamUserBySteamId(ctx, killerSteamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if killerSteamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(killerSteamId)
+				if err != nil {
+					return err
+				}
+			}
+			killerSteamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          killerSteamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	killerPlayer, err := queries.GetPlayerByName(ctx, killerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if killerSteamId == "BOT" {
+				bot = true
+			}
+			killerPlayer, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        killerName,
+				SteamUserID: pgtype.Int8{Int64: killerSteamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	killedSteamUser, err := queries.GetSteamUserBySteamId(ctx, killedSteamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if killedSteamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(killedSteamId)
+				if err != nil {
+					return err
+				}
+			}
+			killedSteamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          killedSteamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	killedPlayer, err := queries.GetPlayerByName(ctx, killedName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if killedSteamId == "BOT" {
+				bot = true
+			}
+			killedPlayer, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        killedName,
+				SteamUserID: pgtype.Int8{Int64: killedSteamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	_, err = queries.GetKillByKillerKilledRoundDateTime(ctx, database.GetKillByKillerKilledRoundDateTimeParams{
+		KillerID: pgtype.Int8{Int64: killerPlayer.ID, Valid: true},
+		KilledID: pgtype.Int8{Int64: killedPlayer.ID, Valid: true},
+		RoundID:  pgtype.Int8{Int64: roundId, Valid: true},
+		KillDate: dbDate,
+		KillTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			killerTeamId, err2 := getTeamID(ctx, conn, killerTeam)
+			if err2 != nil {
+				return err2
+			}
+			killedTeamId, err3 := getTeamID(ctx, conn, killedTeam)
+			if err3 != nil {
+				return err3
+			}
+			weaponId, err4 := getWeaponID(ctx, conn, killerWeapon)
+			if err4 != nil {
+				return err4
+			}
+			specialId, err5 := getSpecialKill(ctx, conn, special)
+			if err5 != nil {
+				return err5
+			}
+			killerXint, err6 := strconv.ParseInt(killerX, 10, 32)
+			if err6 != nil {
+				return err6
+			}
+			killerYint, err7 := strconv.ParseInt(killerY, 10, 32)
+			if err7 != nil {
+				return err7
+			}
+			killerZint, err8 := strconv.ParseInt(killerZ, 10, 32)
+			if err8 != nil {
+				return err8
+			}
+			killedXint, err9 := strconv.ParseInt(killedX, 10, 32)
+			if err9 != nil {
+				return err9
+			}
+			killedYint, err10 := strconv.ParseInt(killedY, 10, 32)
+			if err10 != nil {
+				return err10
+			}
+			killedZint, err11 := strconv.ParseInt(killedZ, 10, 32)
+			if err11 != nil {
+				return err11
+			}
+			_, err12 := queries.CreateKill(ctx, database.CreateKillParams{
+				KillerID:        pgtype.Int8{Int64: killerPlayer.ID, Valid: true},
+				KilledID:        pgtype.Int8{Int64: killedPlayer.ID, Valid: true},
+				RoundID:         pgtype.Int8{Int64: roundId, Valid: true},
+				KillTime:        dbTime,
+				KillDate:        dbDate,
+				KillerTeamID:    pgtype.Int8{Int64: killerTeamId, Valid: true},
+				KilledTeamID:    pgtype.Int8{Int64: killedTeamId, Valid: true},
+				KillerPositionX: int32(killerXint),
+				KillerPositionY: int32(killerYint),
+				KillerPositionZ: int32(killerZint),
+				KilledPositionX: int32(killedXint),
+				KilledPositionY: int32(killedYint),
+				KilledPositionZ: int32(killedZint),
+				KillerWeaponID:  pgtype.Int8{Int64: weaponId, Valid: true},
+				SpecialID:       pgtype.Int8{Int64: specialId, Valid: true},
+			})
+			if err12 != nil {
+				return err12
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleKilledOther(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, killerName string, killerSteamId string, killerTeam string, killerX string, killerY string, killerZ string, killedName string, killedX string, killedY string, killedZ string, killerWeapon string, roundId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	killerSteamUser, err := queries.GetSteamUserBySteamId(ctx, killerSteamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if killerSteamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(killerSteamId)
+				if err != nil {
+					return err
+				}
+			}
+			killerSteamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          killerSteamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	killerPlayer, err := queries.GetPlayerByName(ctx, killerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if killerSteamId == "BOT" {
+				bot = true
+			}
+			killerPlayer, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        killerName,
+				SteamUserID: pgtype.Int8{Int64: killerSteamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	killedOtherId, err := getOtherKillID(ctx, conn, killedName)
+	if err != nil {
+		return err
+	}
+	_, err = queries.GetKillOtherByKillerOtherRoundDateTime(ctx, database.GetKillOtherByKillerOtherRoundDateTimeParams{
+		KillerID:      pgtype.Int8{Int64: killerPlayer.ID, Valid: true},
+		KilledOtherID: pgtype.Int8{Int64: killedOtherId, Valid: true},
+		RoundID:       pgtype.Int8{Int64: roundId, Valid: true},
+		KillDate:      dbDate,
+		KillTime:      dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			killerTeamId, err2 := getTeamID(ctx, conn, killerTeam)
+			if err2 != nil {
+				return err2
+			}
+			weaponId, err3 := getWeaponID(ctx, conn, killerWeapon)
+			if err3 != nil {
+				return err3
+			}
+			killerXint, err4 := strconv.ParseInt(killerX, 10, 32)
+			if err4 != nil {
+				return err4
+			}
+			killerYint, err5 := strconv.ParseInt(killerY, 10, 32)
+			if err5 != nil {
+				return err5
+			}
+			killerZint, err6 := strconv.ParseInt(killerZ, 10, 32)
+			if err6 != nil {
+				return err6
+			}
+			killedXint, err7 := strconv.ParseInt(killedX, 10, 32)
+			if err7 != nil {
+				return err7
+			}
+			killedYint, err8 := strconv.ParseInt(killedY, 10, 32)
+			if err8 != nil {
+				return err8
+			}
+			killedZint, err9 := strconv.ParseInt(killedZ, 10, 32)
+			if err9 != nil {
+				return err9
+			}
+			_, err10 := queries.CreateKillOther(ctx, database.CreateKillOtherParams{
+				KillerID:        pgtype.Int8{Int64: killerPlayer.ID, Valid: true},
+				KilledOtherID:   pgtype.Int8{Int64: killedOtherId, Valid: true},
+				RoundID:         pgtype.Int8{Int64: roundId, Valid: true},
+				KillTime:        dbTime,
+				KillDate:        dbDate,
+				KillerTeamID:    pgtype.Int8{Int64: killerTeamId, Valid: true},
+				KillerPositionX: int32(killerXint),
+				KillerPositionY: int32(killerYint),
+				KillerPositionZ: int32(killerZint),
+				KilledPositionX: int32(killedXint),
+				KilledPositionY: int32(killedYint),
+				KilledPositionZ: int32(killedZint),
+				KillerWeaponID:  pgtype.Int8{Int64: weaponId, Valid: true},
+			})
+			if err10 != nil {
+				return err10
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleAssistedKill(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, killerName string, killerSteamId string, killerTeam string, killedName string, killedSteamId string, killedTeam string, roundId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	killerSteamUser, err := queries.GetSteamUserBySteamId(ctx, killerSteamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if killerSteamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(killerSteamId)
+				if err != nil {
+					return err
+				}
+			}
+			killerSteamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          killerSteamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	killerPlayer, err := queries.GetPlayerByName(ctx, killerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if killerSteamId == "BOT" {
+				bot = true
+			}
+			killerPlayer, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        killerName,
+				SteamUserID: pgtype.Int8{Int64: killerSteamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	killedSteamUser, err := queries.GetSteamUserBySteamId(ctx, killedSteamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if killedSteamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(killedSteamId)
+				if err != nil {
+					return err
+				}
+			}
+			killedSteamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          killedSteamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	killedPlayer, err := queries.GetPlayerByName(ctx, killedName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if killedSteamId == "BOT" {
+				bot = true
+			}
+			killedPlayer, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        killedName,
+				SteamUserID: pgtype.Int8{Int64: killedSteamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	_, err = queries.GetKillAssistedByKillerKilledRoundDateTime(ctx, database.GetKillAssistedByKillerKilledRoundDateTimeParams{
+		KillerID: pgtype.Int8{Int64: killerPlayer.ID, Valid: true},
+		KilledID: pgtype.Int8{Int64: killedPlayer.ID, Valid: true},
+		RoundID:  pgtype.Int8{Int64: roundId, Valid: true},
+		KillDate: dbDate,
+		KillTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			killerTeamId, err2 := getTeamID(ctx, conn, killerTeam)
+			if err2 != nil {
+				return err2
+			}
+			killedTeamId, err3 := getTeamID(ctx, conn, killedTeam)
+			if err3 != nil {
+				return err3
+			}
+			_, err4 := queries.CreateKillAssisted(ctx, database.CreateKillAssistedParams{
+				KillerID:     pgtype.Int8{Int64: killerPlayer.ID, Valid: true},
+				KilledID:     pgtype.Int8{Int64: killedPlayer.ID, Valid: true},
+				RoundID:      pgtype.Int8{Int64: roundId, Valid: true},
+				KillTime:     dbTime,
+				KillDate:     dbDate,
+				KillerTeamID: pgtype.Int8{Int64: killerTeamId, Valid: true},
+				KilledTeamID: pgtype.Int8{Int64: killedTeamId, Valid: true},
+			})
+			if err4 != nil {
+				return err4
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleItemInteraction(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, playerName string, steamId string, team string, interaction string, item string, roundId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	steamUser, err := queries.GetSteamUserBySteamId(ctx, steamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if steamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(steamId)
+				if err != nil {
+					return err
+				}
+			}
+			steamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          steamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	player, err := queries.GetPlayerByName(ctx, playerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if steamId == "BOT" {
+				bot = true
+			}
+			player, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        playerName,
+				SteamUserID: pgtype.Int8{Int64: steamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	itemId, err := getItemID(ctx, conn, item)
+	if err != nil {
+		return err
+	}
+	itemActionId, err := getItemActionID(ctx, conn, interaction)
+	if err != nil {
+		return err
+	}
+	_, err = queries.GetItemInteractionByPlayerItemInteractionRoundDateTime(ctx, database.GetItemInteractionByPlayerItemInteractionRoundDateTimeParams{
+		PlayerID:        pgtype.Int8{Int64: player.ID, Valid: true},
+		ItemID:          pgtype.Int8{Int64: itemId, Valid: true},
+		ItemAction:      pgtype.Int8{Int64: itemActionId, Valid: true},
+		RoundID:         pgtype.Int8{Int64: roundId, Valid: true},
+		InteractionDate: dbDate,
+		InteractionTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			teamId, err2 := getTeamID(ctx, conn, team)
+			if err2 != nil {
+				return err2
+			}
+			_, err3 := queries.CreateItemInteraction(ctx, database.CreateItemInteractionParams{
+				PlayerID:        pgtype.Int8{Int64: player.ID, Valid: true},
+				TeamID:          pgtype.Int8{Int64: teamId, Valid: true},
+				RoundID:         pgtype.Int8{Int64: roundId, Valid: true},
+				ItemID:          pgtype.Int8{Int64: itemId, Valid: true},
+				ItemAction:      pgtype.Int8{Int64: itemActionId, Valid: true},
+				InteractionTime: dbTime,
+				InteractionDate: dbDate,
+			})
+			if err3 != nil {
+				return err3
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleMoneyChange(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, playerName string, steamId string, team string, newTotal string, item string, roundId int64) error {
+	fmt.Printf("playerName: %s, newTotal: %s, item: %s", playerName, newTotal, item)
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	steamUser, err := queries.GetSteamUserBySteamId(ctx, steamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if steamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(steamId)
+				if err != nil {
+					return err
+				}
+			}
+			steamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          steamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	player, err := queries.GetPlayerByName(ctx, playerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if steamId == "BOT" {
+				bot = true
+			}
+			player, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        playerName,
+				SteamUserID: pgtype.Int8{Int64: steamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	newTotalInt, err := strconv.ParseInt(newTotal, 10, 32)
+	if err != nil {
+		return err
+	}
+	_, err = queries.GetMoneyChangeByPlayerNewTotalRoundDateTime(ctx, database.GetMoneyChangeByPlayerNewTotalRoundDateTimeParams{
+		PlayerID:   pgtype.Int8{Int64: player.ID, Valid: true},
+		NewTotal:   int32(newTotalInt),
+		RoundID:    pgtype.Int8{Int64: roundId, Valid: true},
+		ChangeDate: dbDate,
+		ChangeTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			teamId, err2 := getTeamID(ctx, conn, team)
+			if err2 != nil {
+				return err2
+			}
+			itemId, err3 := getItemID(ctx, conn, item)
+			if err3 != nil {
+				return err3
+			}
+			_, err4 := queries.CreateMoneyChange(ctx, database.CreateMoneyChangeParams{
+				PlayerID:   pgtype.Int8{Int64: player.ID, Valid: true},
+				TeamID:     pgtype.Int8{Int64: teamId, Valid: true},
+				RoundID:    pgtype.Int8{Int64: roundId, Valid: true},
+				ItemID:     pgtype.Int8{Int64: itemId, Valid: true},
+				NewTotal:   int32(newTotalInt),
+				ChangeTime: dbTime,
+				ChangeDate: dbDate,
+			})
+			if err4 != nil {
+				return err4
 			}
 		} else {
 			return err
