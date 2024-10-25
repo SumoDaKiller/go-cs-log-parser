@@ -12,25 +12,29 @@ import (
 )
 
 const createAttack = `-- name: CreateAttack :one
-insert into attacks (attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position, attacked_position, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position, attacked_position, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id
+insert into attacks (attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position_x, attacker_position_y, attacker_position_z, attacked_position_x, attacked_position_y, attacked_position_z, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) returning id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position_x, attacker_position_y, attacker_position_z, attacked_position_x, attacked_position_y, attacked_position_z, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id
 `
 
 type CreateAttackParams struct {
-	AttackerID       pgtype.Int8
-	AttackedID       pgtype.Int8
-	RoundID          pgtype.Int8
-	AttackTime       pgtype.Time
-	AttackDate       pgtype.Date
-	AttackerTeamID   pgtype.Int8
-	AttackedTeamID   pgtype.Int8
-	AttackerPosition []byte
-	AttackedPosition []byte
-	AttackerWeaponID pgtype.Int8
-	Damage           int32
-	DamageArmor      int32
-	Health           int32
-	Armor            int32
-	HitGroupID       pgtype.Int8
+	AttackerID        pgtype.Int8
+	AttackedID        pgtype.Int8
+	RoundID           pgtype.Int8
+	AttackTime        pgtype.Time
+	AttackDate        pgtype.Date
+	AttackerTeamID    pgtype.Int8
+	AttackedTeamID    pgtype.Int8
+	AttackerPositionX int32
+	AttackerPositionY int32
+	AttackerPositionZ int32
+	AttackedPositionX int32
+	AttackedPositionY int32
+	AttackedPositionZ int32
+	AttackerWeaponID  pgtype.Int8
+	Damage            int32
+	DamageArmor       int32
+	Health            int32
+	Armor             int32
+	HitGroupID        pgtype.Int8
 }
 
 func (q *Queries) CreateAttack(ctx context.Context, arg CreateAttackParams) (Attack, error) {
@@ -42,8 +46,12 @@ func (q *Queries) CreateAttack(ctx context.Context, arg CreateAttackParams) (Att
 		arg.AttackDate,
 		arg.AttackerTeamID,
 		arg.AttackedTeamID,
-		arg.AttackerPosition,
-		arg.AttackedPosition,
+		arg.AttackerPositionX,
+		arg.AttackerPositionY,
+		arg.AttackerPositionZ,
+		arg.AttackedPositionX,
+		arg.AttackedPositionY,
+		arg.AttackedPositionZ,
 		arg.AttackerWeaponID,
 		arg.Damage,
 		arg.DamageArmor,
@@ -61,8 +69,12 @@ func (q *Queries) CreateAttack(ctx context.Context, arg CreateAttackParams) (Att
 		&i.AttackDate,
 		&i.AttackerTeamID,
 		&i.AttackedTeamID,
-		&i.AttackerPosition,
-		&i.AttackedPosition,
+		&i.AttackerPositionX,
+		&i.AttackerPositionY,
+		&i.AttackerPositionZ,
+		&i.AttackedPositionX,
+		&i.AttackedPositionY,
+		&i.AttackedPositionZ,
 		&i.AttackerWeaponID,
 		&i.Damage,
 		&i.DamageArmor,
@@ -96,21 +108,25 @@ func (q *Queries) CreateHitGroup(ctx context.Context, name string) (HitGroup, er
 }
 
 const createKill = `-- name: CreateKill :one
-insert into kills (killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position, killed_position, killer_weapon_id, special_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position, killed_position, killer_weapon_id, special_id
+insert into kills (killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id, special_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id, special_id
 `
 
 type CreateKillParams struct {
-	KillerID       pgtype.Int8
-	KilledID       pgtype.Int8
-	RoundID        pgtype.Int8
-	KillTime       pgtype.Time
-	KillDate       pgtype.Date
-	KillerTeamID   pgtype.Int8
-	KilledTeamID   pgtype.Int8
-	KillerPosition []byte
-	KilledPosition []byte
-	KillerWeaponID pgtype.Int8
-	SpecialID      pgtype.Int8
+	KillerID        pgtype.Int8
+	KilledID        pgtype.Int8
+	RoundID         pgtype.Int8
+	KillTime        pgtype.Time
+	KillDate        pgtype.Date
+	KillerTeamID    pgtype.Int8
+	KilledTeamID    pgtype.Int8
+	KillerPositionX int32
+	KillerPositionY int32
+	KillerPositionZ int32
+	KilledPositionX int32
+	KilledPositionY int32
+	KilledPositionZ int32
+	KillerWeaponID  pgtype.Int8
+	SpecialID       pgtype.Int8
 }
 
 func (q *Queries) CreateKill(ctx context.Context, arg CreateKillParams) (Kill, error) {
@@ -122,8 +138,12 @@ func (q *Queries) CreateKill(ctx context.Context, arg CreateKillParams) (Kill, e
 		arg.KillDate,
 		arg.KillerTeamID,
 		arg.KilledTeamID,
-		arg.KillerPosition,
-		arg.KilledPosition,
+		arg.KillerPositionX,
+		arg.KillerPositionY,
+		arg.KillerPositionZ,
+		arg.KilledPositionX,
+		arg.KilledPositionY,
+		arg.KilledPositionZ,
 		arg.KillerWeaponID,
 		arg.SpecialID,
 	)
@@ -137,8 +157,12 @@ func (q *Queries) CreateKill(ctx context.Context, arg CreateKillParams) (Kill, e
 		&i.KillDate,
 		&i.KillerTeamID,
 		&i.KilledTeamID,
-		&i.KillerPosition,
-		&i.KilledPosition,
+		&i.KillerPositionX,
+		&i.KillerPositionY,
+		&i.KillerPositionZ,
+		&i.KilledPositionX,
+		&i.KilledPositionY,
+		&i.KilledPositionZ,
 		&i.KillerWeaponID,
 		&i.SpecialID,
 	)
@@ -328,7 +352,7 @@ func (q *Queries) CreateWeapon(ctx context.Context, name string) (Weapon, error)
 
 const getAttack = `-- name: GetAttack :one
 
-select id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position, attacked_position, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id from attacks where id = $1 limit 1
+select id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position_x, attacker_position_y, attacker_position_z, attacked_position_x, attacked_position_y, attacked_position_z, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id from attacks where id = $1 limit 1
 `
 
 // Attacks
@@ -344,8 +368,12 @@ func (q *Queries) GetAttack(ctx context.Context, id int64) (Attack, error) {
 		&i.AttackDate,
 		&i.AttackerTeamID,
 		&i.AttackedTeamID,
-		&i.AttackerPosition,
-		&i.AttackedPosition,
+		&i.AttackerPositionX,
+		&i.AttackerPositionY,
+		&i.AttackerPositionZ,
+		&i.AttackedPositionX,
+		&i.AttackedPositionY,
+		&i.AttackedPositionZ,
 		&i.AttackerWeaponID,
 		&i.Damage,
 		&i.DamageArmor,
@@ -357,7 +385,7 @@ func (q *Queries) GetAttack(ctx context.Context, id int64) (Attack, error) {
 }
 
 const getAttackByAttackerAttackedRoundDateTime = `-- name: GetAttackByAttackerAttackedRoundDateTime :one
-select id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position, attacked_position, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id from attacks where attacker_id = $1 and attacked_id = $2 and round_id = $3 and attack_date = $4 and attack_time = $5 limit 1
+select id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position_x, attacker_position_y, attacker_position_z, attacked_position_x, attacked_position_y, attacked_position_z, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id from attacks where attacker_id = $1 and attacked_id = $2 and round_id = $3 and attack_date = $4 and attack_time = $5 limit 1
 `
 
 type GetAttackByAttackerAttackedRoundDateTimeParams struct {
@@ -386,8 +414,12 @@ func (q *Queries) GetAttackByAttackerAttackedRoundDateTime(ctx context.Context, 
 		&i.AttackDate,
 		&i.AttackerTeamID,
 		&i.AttackedTeamID,
-		&i.AttackerPosition,
-		&i.AttackedPosition,
+		&i.AttackerPositionX,
+		&i.AttackerPositionY,
+		&i.AttackerPositionZ,
+		&i.AttackedPositionX,
+		&i.AttackedPositionY,
+		&i.AttackedPositionZ,
 		&i.AttackerWeaponID,
 		&i.Damage,
 		&i.DamageArmor,
@@ -448,7 +480,7 @@ func (q *Queries) GetHitGroupByName(ctx context.Context, name string) (HitGroup,
 
 const getKill = `-- name: GetKill :one
 
-select id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position, killed_position, killer_weapon_id, special_id from kills where id = $1 limit 1
+select id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id, special_id from kills where id = $1 limit 1
 `
 
 // Kills
@@ -464,8 +496,12 @@ func (q *Queries) GetKill(ctx context.Context, id int64) (Kill, error) {
 		&i.KillDate,
 		&i.KillerTeamID,
 		&i.KilledTeamID,
-		&i.KillerPosition,
-		&i.KilledPosition,
+		&i.KillerPositionX,
+		&i.KillerPositionY,
+		&i.KillerPositionZ,
+		&i.KilledPositionX,
+		&i.KilledPositionY,
+		&i.KilledPositionZ,
 		&i.KillerWeaponID,
 		&i.SpecialID,
 	)
@@ -473,7 +509,7 @@ func (q *Queries) GetKill(ctx context.Context, id int64) (Kill, error) {
 }
 
 const getKillByKillerKilledRoundDateTime = `-- name: GetKillByKillerKilledRoundDateTime :one
-select id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position, killed_position, killer_weapon_id, special_id from kills where killer_id = $1 and killed_id = $2 and round_id = $3 and kill_date = $4 and kill_time = $5 limit 1
+select id, killer_id, killed_id, round_id, kill_time, kill_date, killer_team_id, killed_team_id, killer_position_x, killer_position_y, killer_position_z, killed_position_x, killed_position_y, killed_position_z, killer_weapon_id, special_id from kills where killer_id = $1 and killed_id = $2 and round_id = $3 and kill_date = $4 and kill_time = $5 limit 1
 `
 
 type GetKillByKillerKilledRoundDateTimeParams struct {
@@ -502,8 +538,12 @@ func (q *Queries) GetKillByKillerKilledRoundDateTime(ctx context.Context, arg Ge
 		&i.KillDate,
 		&i.KillerTeamID,
 		&i.KilledTeamID,
-		&i.KillerPosition,
-		&i.KilledPosition,
+		&i.KillerPositionX,
+		&i.KillerPositionY,
+		&i.KillerPositionZ,
+		&i.KilledPositionX,
+		&i.KilledPositionY,
+		&i.KilledPositionZ,
 		&i.KillerWeaponID,
 		&i.SpecialID,
 	)

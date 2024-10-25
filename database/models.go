@@ -9,22 +9,26 @@ import (
 )
 
 type Attack struct {
-	ID               int64
-	AttackerID       pgtype.Int8
-	AttackedID       pgtype.Int8
-	RoundID          pgtype.Int8
-	AttackTime       pgtype.Time
-	AttackDate       pgtype.Date
-	AttackerTeamID   pgtype.Int8
-	AttackedTeamID   pgtype.Int8
-	AttackerPosition []byte
-	AttackedPosition []byte
-	AttackerWeaponID pgtype.Int8
-	Damage           int32
-	DamageArmor      int32
-	Health           int32
-	Armor            int32
-	HitGroupID       pgtype.Int8
+	ID                int64
+	AttackerID        pgtype.Int8
+	AttackedID        pgtype.Int8
+	RoundID           pgtype.Int8
+	AttackTime        pgtype.Time
+	AttackDate        pgtype.Date
+	AttackerTeamID    pgtype.Int8
+	AttackedTeamID    pgtype.Int8
+	AttackerPositionX int32
+	AttackerPositionY int32
+	AttackerPositionZ int32
+	AttackedPositionX int32
+	AttackedPositionY int32
+	AttackedPositionZ int32
+	AttackerWeaponID  pgtype.Int8
+	Damage            int32
+	DamageArmor       int32
+	Health            int32
+	Armor             int32
+	HitGroupID        pgtype.Int8
 }
 
 type GameType struct {
@@ -38,18 +42,22 @@ type HitGroup struct {
 }
 
 type Kill struct {
-	ID             int64
-	KillerID       pgtype.Int8
-	KilledID       pgtype.Int8
-	RoundID        pgtype.Int8
-	KillTime       pgtype.Time
-	KillDate       pgtype.Date
-	KillerTeamID   pgtype.Int8
-	KilledTeamID   pgtype.Int8
-	KillerPosition []byte
-	KilledPosition []byte
-	KillerWeaponID pgtype.Int8
-	SpecialID      pgtype.Int8
+	ID              int64
+	KillerID        pgtype.Int8
+	KilledID        pgtype.Int8
+	RoundID         pgtype.Int8
+	KillTime        pgtype.Time
+	KillDate        pgtype.Date
+	KillerTeamID    pgtype.Int8
+	KilledTeamID    pgtype.Int8
+	KillerPositionX int32
+	KillerPositionY int32
+	KillerPositionZ int32
+	KilledPositionX int32
+	KilledPositionY int32
+	KilledPositionZ int32
+	KillerWeaponID  pgtype.Int8
+	SpecialID       pgtype.Int8
 }
 
 type Map struct {
