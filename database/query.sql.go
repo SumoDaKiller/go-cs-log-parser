@@ -11,6 +11,47 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createAccolade = `-- name: CreateAccolade :one
+insert into accolade (player_id, match_id, accolade_date, accolade_time, accolade_name, accolade_value, accolade_pos, accolade_score) values ($1, $2, $3, $4, $5, $6, $7, $8) returning id, player_id, match_id, accolade_time, accolade_date, accolade_name, accolade_value, accolade_pos, accolade_score
+`
+
+type CreateAccoladeParams struct {
+	PlayerID      pgtype.Int8
+	MatchID       pgtype.Int8
+	AccoladeDate  pgtype.Date
+	AccoladeTime  pgtype.Time
+	AccoladeName  string
+	AccoladeValue string
+	AccoladePos   int32
+	AccoladeScore string
+}
+
+func (q *Queries) CreateAccolade(ctx context.Context, arg CreateAccoladeParams) (Accolade, error) {
+	row := q.db.QueryRow(ctx, createAccolade,
+		arg.PlayerID,
+		arg.MatchID,
+		arg.AccoladeDate,
+		arg.AccoladeTime,
+		arg.AccoladeName,
+		arg.AccoladeValue,
+		arg.AccoladePos,
+		arg.AccoladeScore,
+	)
+	var i Accolade
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.MatchID,
+		&i.AccoladeTime,
+		&i.AccoladeDate,
+		&i.AccoladeName,
+		&i.AccoladeValue,
+		&i.AccoladePos,
+		&i.AccoladeScore,
+	)
+	return i, err
+}
+
 const createAttack = `-- name: CreateAttack :one
 insert into attacks (attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position_x, attacker_position_y, attacker_position_z, attacked_position_x, attacked_position_y, attacked_position_z, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) returning id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position_x, attacker_position_y, attacker_position_z, attacked_position_x, attacked_position_y, attacked_position_z, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id
 `
@@ -81,6 +122,50 @@ func (q *Queries) CreateAttack(ctx context.Context, arg CreateAttackParams) (Att
 		&i.Health,
 		&i.Armor,
 		&i.HitGroupID,
+	)
+	return i, err
+}
+
+const createBlinded = `-- name: CreateBlinded :one
+insert into blinded (blinded_id, blinded_team_id, blinded_by_id, blinded_by_team_id, round_id, blinded_date, blinded_time, blinded_for, entindex) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id, blinded_id, blinded_by_id, round_id, blinded_time, blinded_date, blinded_team_id, blinded_by_team_id, blinded_for, entindex
+`
+
+type CreateBlindedParams struct {
+	BlindedID       pgtype.Int8
+	BlindedTeamID   pgtype.Int8
+	BlindedByID     pgtype.Int8
+	BlindedByTeamID pgtype.Int8
+	RoundID         pgtype.Int8
+	BlindedDate     pgtype.Date
+	BlindedTime     pgtype.Time
+	BlindedFor      string
+	Entindex        int32
+}
+
+func (q *Queries) CreateBlinded(ctx context.Context, arg CreateBlindedParams) (Blinded, error) {
+	row := q.db.QueryRow(ctx, createBlinded,
+		arg.BlindedID,
+		arg.BlindedTeamID,
+		arg.BlindedByID,
+		arg.BlindedByTeamID,
+		arg.RoundID,
+		arg.BlindedDate,
+		arg.BlindedTime,
+		arg.BlindedFor,
+		arg.Entindex,
+	)
+	var i Blinded
+	err := row.Scan(
+		&i.ID,
+		&i.BlindedID,
+		&i.BlindedByID,
+		&i.RoundID,
+		&i.BlindedTime,
+		&i.BlindedDate,
+		&i.BlindedTeamID,
+		&i.BlindedByTeamID,
+		&i.BlindedFor,
+		&i.Entindex,
 	)
 	return i, err
 }
@@ -597,8 +682,55 @@ func (q *Queries) CreateTeamSwitchEvent(ctx context.Context, arg CreateTeamSwitc
 	return err
 }
 
+const createThrew = `-- name: CreateThrew :one
+insert into threw (player_id, team_id, round_id, threw_time, threw_date, position_x, position_y, position_z, weapon_id, entindex) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id, player_id, team_id, round_id, threw_time, threw_date, position_x, position_y, position_z, weapon_id, entindex
+`
+
+type CreateThrewParams struct {
+	PlayerID  pgtype.Int8
+	TeamID    pgtype.Int8
+	RoundID   pgtype.Int8
+	ThrewTime pgtype.Time
+	ThrewDate pgtype.Date
+	PositionX int32
+	PositionY int32
+	PositionZ int32
+	WeaponID  pgtype.Int8
+	Entindex  int32
+}
+
+func (q *Queries) CreateThrew(ctx context.Context, arg CreateThrewParams) (Threw, error) {
+	row := q.db.QueryRow(ctx, createThrew,
+		arg.PlayerID,
+		arg.TeamID,
+		arg.RoundID,
+		arg.ThrewTime,
+		arg.ThrewDate,
+		arg.PositionX,
+		arg.PositionY,
+		arg.PositionZ,
+		arg.WeaponID,
+		arg.Entindex,
+	)
+	var i Threw
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ThrewTime,
+		&i.ThrewDate,
+		&i.PositionX,
+		&i.PositionY,
+		&i.PositionZ,
+		&i.WeaponID,
+		&i.Entindex,
+	)
+	return i, err
+}
+
 const createTriggeredEvent = `-- name: CreateTriggeredEvent :one
-insert into triggered_events (player_id, team_id, round_id, event_id, event_time, event_date) values ($1, $2, $3, $4, $5, $6) returning id, player_id, team_id, round_id, event_id, event_time, event_date
+insert into triggered_events (player_id, team_id, round_id, event_id, event_time, event_date, bombsite) values ($1, $2, $3, $4, $5, $6, $7) returning id, player_id, team_id, round_id, event_id, event_time, event_date, bombsite
 `
 
 type CreateTriggeredEventParams struct {
@@ -608,6 +740,7 @@ type CreateTriggeredEventParams struct {
 	EventID   pgtype.Int8
 	EventTime pgtype.Time
 	EventDate pgtype.Date
+	Bombsite  string
 }
 
 func (q *Queries) CreateTriggeredEvent(ctx context.Context, arg CreateTriggeredEventParams) (TriggeredEvent, error) {
@@ -618,6 +751,7 @@ func (q *Queries) CreateTriggeredEvent(ctx context.Context, arg CreateTriggeredE
 		arg.EventID,
 		arg.EventTime,
 		arg.EventDate,
+		arg.Bombsite,
 	)
 	var i TriggeredEvent
 	err := row.Scan(
@@ -628,6 +762,7 @@ func (q *Queries) CreateTriggeredEvent(ctx context.Context, arg CreateTriggeredE
 		&i.EventID,
 		&i.EventTime,
 		&i.EventDate,
+		&i.Bombsite,
 	)
 	return i, err
 }
@@ -640,6 +775,66 @@ func (q *Queries) CreateWeapon(ctx context.Context, name string) (Weapon, error)
 	row := q.db.QueryRow(ctx, createWeapon, name)
 	var i Weapon
 	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getAccolade = `-- name: GetAccolade :one
+
+select id, player_id, match_id, accolade_time, accolade_date, accolade_name, accolade_value, accolade_pos, accolade_score from accolade where id = $1 limit 1
+`
+
+// --------------------
+// Accolade
+// --------------------
+func (q *Queries) GetAccolade(ctx context.Context, id int64) (Accolade, error) {
+	row := q.db.QueryRow(ctx, getAccolade, id)
+	var i Accolade
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.MatchID,
+		&i.AccoladeTime,
+		&i.AccoladeDate,
+		&i.AccoladeName,
+		&i.AccoladeValue,
+		&i.AccoladePos,
+		&i.AccoladeScore,
+	)
+	return i, err
+}
+
+const getAccoladeByNamePlayerMatchDateTime = `-- name: GetAccoladeByNamePlayerMatchDateTime :one
+select id, player_id, match_id, accolade_time, accolade_date, accolade_name, accolade_value, accolade_pos, accolade_score from accolade where accolade_name = $1 and player_id = $2 and match_id = $3 and accolade_date = $4 and accolade_time = $5 limit 1
+`
+
+type GetAccoladeByNamePlayerMatchDateTimeParams struct {
+	AccoladeName string
+	PlayerID     pgtype.Int8
+	MatchID      pgtype.Int8
+	AccoladeDate pgtype.Date
+	AccoladeTime pgtype.Time
+}
+
+func (q *Queries) GetAccoladeByNamePlayerMatchDateTime(ctx context.Context, arg GetAccoladeByNamePlayerMatchDateTimeParams) (Accolade, error) {
+	row := q.db.QueryRow(ctx, getAccoladeByNamePlayerMatchDateTime,
+		arg.AccoladeName,
+		arg.PlayerID,
+		arg.MatchID,
+		arg.AccoladeDate,
+		arg.AccoladeTime,
+	)
+	var i Accolade
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.MatchID,
+		&i.AccoladeTime,
+		&i.AccoladeDate,
+		&i.AccoladeName,
+		&i.AccoladeValue,
+		&i.AccoladePos,
+		&i.AccoladeScore,
+	)
 	return i, err
 }
 
@@ -721,6 +916,66 @@ func (q *Queries) GetAttackByAttackerAttackedRoundDateTime(ctx context.Context, 
 		&i.Health,
 		&i.Armor,
 		&i.HitGroupID,
+	)
+	return i, err
+}
+
+const getBlinded = `-- name: GetBlinded :one
+
+select id, blinded_id, blinded_by_id, round_id, blinded_time, blinded_date, blinded_team_id, blinded_by_team_id, blinded_for, entindex from blinded where id = $1 limit 1
+`
+
+// --------------------
+// Player Blinded
+// --------------------
+func (q *Queries) GetBlinded(ctx context.Context, id int64) (Blinded, error) {
+	row := q.db.QueryRow(ctx, getBlinded, id)
+	var i Blinded
+	err := row.Scan(
+		&i.ID,
+		&i.BlindedID,
+		&i.BlindedByID,
+		&i.RoundID,
+		&i.BlindedTime,
+		&i.BlindedDate,
+		&i.BlindedTeamID,
+		&i.BlindedByTeamID,
+		&i.BlindedFor,
+		&i.Entindex,
+	)
+	return i, err
+}
+
+const getBlindedByPlayerRoundDateTime = `-- name: GetBlindedByPlayerRoundDateTime :one
+select id, blinded_id, blinded_by_id, round_id, blinded_time, blinded_date, blinded_team_id, blinded_by_team_id, blinded_for, entindex from blinded where blinded_id = $1 and round_id = $2 and blinded_date = $3 and blinded_time= $4 limit 1
+`
+
+type GetBlindedByPlayerRoundDateTimeParams struct {
+	BlindedID   pgtype.Int8
+	RoundID     pgtype.Int8
+	BlindedDate pgtype.Date
+	BlindedTime pgtype.Time
+}
+
+func (q *Queries) GetBlindedByPlayerRoundDateTime(ctx context.Context, arg GetBlindedByPlayerRoundDateTimeParams) (Blinded, error) {
+	row := q.db.QueryRow(ctx, getBlindedByPlayerRoundDateTime,
+		arg.BlindedID,
+		arg.RoundID,
+		arg.BlindedDate,
+		arg.BlindedTime,
+	)
+	var i Blinded
+	err := row.Scan(
+		&i.ID,
+		&i.BlindedID,
+		&i.BlindedByID,
+		&i.RoundID,
+		&i.BlindedTime,
+		&i.BlindedDate,
+		&i.BlindedTeamID,
+		&i.BlindedByTeamID,
+		&i.BlindedFor,
+		&i.Entindex,
 	)
 	return i, err
 }
@@ -1592,9 +1847,73 @@ func (q *Queries) GetTeamSwitchByPlayerAndDateTime(ctx context.Context, arg GetT
 	return i, err
 }
 
+const getThrew = `-- name: GetThrew :one
+
+select id, player_id, team_id, round_id, threw_time, threw_date, position_x, position_y, position_z, weapon_id, entindex from threw where id = $1 limit 1
+`
+
+// --------------------
+// Player Threw
+// --------------------
+func (q *Queries) GetThrew(ctx context.Context, id int64) (Threw, error) {
+	row := q.db.QueryRow(ctx, getThrew, id)
+	var i Threw
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ThrewTime,
+		&i.ThrewDate,
+		&i.PositionX,
+		&i.PositionY,
+		&i.PositionZ,
+		&i.WeaponID,
+		&i.Entindex,
+	)
+	return i, err
+}
+
+const getThrewByPlayerWeaponRoundDateTime = `-- name: GetThrewByPlayerWeaponRoundDateTime :one
+select id, player_id, team_id, round_id, threw_time, threw_date, position_x, position_y, position_z, weapon_id, entindex from threw where player_id = $1 and weapon_id = $2 and round_id = $3 and threw_date = $4 and threw_time = $5 limit 1
+`
+
+type GetThrewByPlayerWeaponRoundDateTimeParams struct {
+	PlayerID  pgtype.Int8
+	WeaponID  pgtype.Int8
+	RoundID   pgtype.Int8
+	ThrewDate pgtype.Date
+	ThrewTime pgtype.Time
+}
+
+func (q *Queries) GetThrewByPlayerWeaponRoundDateTime(ctx context.Context, arg GetThrewByPlayerWeaponRoundDateTimeParams) (Threw, error) {
+	row := q.db.QueryRow(ctx, getThrewByPlayerWeaponRoundDateTime,
+		arg.PlayerID,
+		arg.WeaponID,
+		arg.RoundID,
+		arg.ThrewDate,
+		arg.ThrewTime,
+	)
+	var i Threw
+	err := row.Scan(
+		&i.ID,
+		&i.PlayerID,
+		&i.TeamID,
+		&i.RoundID,
+		&i.ThrewTime,
+		&i.ThrewDate,
+		&i.PositionX,
+		&i.PositionY,
+		&i.PositionZ,
+		&i.WeaponID,
+		&i.Entindex,
+	)
+	return i, err
+}
+
 const getTriggeredEvent = `-- name: GetTriggeredEvent :one
 
-select id, player_id, team_id, round_id, event_id, event_time, event_date from triggered_events where id = $1 limit 1
+select id, player_id, team_id, round_id, event_id, event_time, event_date, bombsite from triggered_events where id = $1 limit 1
 `
 
 // --------------------
@@ -1611,12 +1930,13 @@ func (q *Queries) GetTriggeredEvent(ctx context.Context, id int64) (TriggeredEve
 		&i.EventID,
 		&i.EventTime,
 		&i.EventDate,
+		&i.Bombsite,
 	)
 	return i, err
 }
 
 const getTriggeredEventByPlayerEventRoundDateTime = `-- name: GetTriggeredEventByPlayerEventRoundDateTime :one
-select id, player_id, team_id, round_id, event_id, event_time, event_date from triggered_events where player_id = $1 and event_id = $2 and round_id = $3 and event_date = $4 and event_time = $5 limit 1
+select id, player_id, team_id, round_id, event_id, event_time, event_date, bombsite from triggered_events where player_id = $1 and event_id = $2 and round_id = $3 and event_date = $4 and event_time = $5 limit 1
 `
 
 type GetTriggeredEventByPlayerEventRoundDateTimeParams struct {
@@ -1644,6 +1964,7 @@ func (q *Queries) GetTriggeredEventByPlayerEventRoundDateTime(ctx context.Contex
 		&i.EventID,
 		&i.EventTime,
 		&i.EventDate,
+		&i.Bombsite,
 	)
 	return i, err
 }

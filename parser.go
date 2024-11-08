@@ -27,8 +27,8 @@ func initializeRegexpPatterns() map[string]*regexp.Regexp {
 	re["killed"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<killerName>[^<]+)<\d+><(?P<killerSteamId>BOT|STEAM[^>]+)><(?P<killerTeam>CT|TERRORIST)>" \[(?P<killerX>-?\d+) (?P<killerY>-?\d+) (?P<killerZ>-?\d+)] killed "(?P<killedName>[^<]+)<\d+><(?P<killedSteamId>BOT|STEAM[^>]+)><(?P<killedTeam>CT|TERRORIST)>" \[(?P<killedX>-?\d+) (?P<killedY>-?\d+) (?P<killedZ>-?\d+)] with "(?P<killerWeapon>\w+)"\s?\(?(?P<special>\w*)\)?$`)
 	re["assistedKill"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<killerName>[^<]+)<\d+><(?P<killerSteamId>BOT|STEAM[^>]+)><(?P<killerTeam>CT|TERRORIST)>" assisted killing "(?P<killedName>[^<]+)<\d+><(?P<killedSteamId>BOT|STEAM[^>]+)><(?P<killedTeam>CT|TERRORIST)>"$`)
 	re["killedOther"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<killerName>[^<]+)<\d+><(?P<killerSteamId>BOT|STEAM[^>]+)><(?P<killerTeam>CT|TERRORIST)>" \[(?P<killerX>-?\d+) (?P<killerY>-?\d+) (?P<killerZ>-?\d+)] killed other "(?P<killedName>[^<]+)<\d+>" \[(?P<killedX>-?\d+) (?P<killedY>-?\d+) (?P<killedZ>-?\d+)] with "(?P<killerWeapon>\w+)"$`)
-	re["threw"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<playerSteamId>BOT|STEAM[^>]+)><(?P<playerTeam>CT|TERRORIST)>" threw (?P<object>\S+) \[(?P<playerX>-?\d+) (?P<playerY>-?\d+) (?P<playerZ>-?\d+)]( flashbang entindex \d+)?$`)
-	re["blinded"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<blindedName>[^<]+)<\d+><(?P<blindedSteamId>BOT|STEAM[^>]+)><(?P<blindedTeam>CT|TERRORIST)>" blinded for (?P<blindedTime>\S+) by "(?P<byName>[^<]+)<\d+><(?P<bySteamId>BOT|STEAM[^>]+)><(?P<byTeam>CT|TERRORIST)>" from flashbang entindex \d+$`)
+	re["threw"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<playerSteamId>BOT|STEAM[^>]+)><(?P<playerTeam>CT|TERRORIST)>" threw (?P<object>\S+) \[(?P<playerX>-?\d+) (?P<playerY>-?\d+) (?P<playerZ>-?\d+)]( flashbang entindex (?P<entindex>\d+))?\)?$`)
+	re["blinded"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<blindedName>[^<]+)<\d+><(?P<blindedSteamId>BOT|STEAM[^>]+)><(?P<blindedTeam>CT|TERRORIST)>" blinded for (?P<blindedTime>\S+) by "(?P<byName>[^<]+)<\d+><(?P<bySteamId>BOT|STEAM[^>]+)><(?P<byTeam>CT|TERRORIST)>" from flashbang entindex (?P<entindex>\d+)\s?$`)
 	re["shopping"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" (?P<type>dropped|purchased|picked up) "(?P<item>[^"])"$`)
 	re["moneyChange"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" money change [^=]+= \$(?P<newTotal>\d+) \(tracked\)\s?\(?[^:]*:?\s?(?P<item>[^)]*)\)?$`)
 	re["leftBuyZone"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" left buyzone with \[(?P<items>[^]])]$`)
@@ -36,7 +36,7 @@ func initializeRegexpPatterns() map[string]*regexp.Regexp {
 	re["suicide"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" \[(?P<suicideX>-?\d+) (?P<suicideY>-?\d+) (?P<suicideZ>-?\d+)] committed suicide with "(?P<item>[^"]+)"$`)
 	re["disconnected"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" disconnected \(reason "(?P<reason>[^"]+)"\)$`)
 	re["accolade"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): ACCOLADE, FINAL: \{(?P<name>\w+)},\s+(?P<playerName>[^<]+)<\d+>,\s+VALUE: (?P<value>\d+\.\d+),\s+POS:\s+(?P<position>[^,]+),\s+SCORE: (?P<score>\d+\.\d+)$`)
-	re["triggered"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" triggered "(?P<event>[^"]+)"$`)
+	re["triggered"] = regexp.MustCompile(`^L (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" triggered "(?P<event>[^"]+)"( at bombsite (?P<bombsite>[AB])+)?$`)
 	return re
 }
 
@@ -113,23 +113,26 @@ func parseFile(r io.Reader, re map[string]*regexp.Regexp) error {
 					if err != nil {
 						log.Println("error handling matchStart: ", err)
 					}
-				case "matchStatus":
-					fmt.Println("matchStatus")
 				case "roundStart":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					currentRound, err = handleRoundStart(ctx, conn, currentMatch.ID, matches[dateIdx], matches[timeIdx])
-					if err != nil {
-						log.Println("error handling roundStart: ", err)
+					// Due to warmup on a map there can be a round start before match start, currently we ignore warmup
+					if currentMatch.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						currentRound, err = handleRoundStart(ctx, conn, currentMatch.ID, matches[dateIdx], matches[timeIdx])
+						if err != nil {
+							log.Println("error handling roundStart: ", err)
+						}
 					}
 				case "roundEnd":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					err = handleRoundEnd(ctx, conn, currentRound.ID, matches[dateIdx], matches[timeIdx], currentWinnerID)
-					if err != nil {
-						log.Println("error handling roundEnd: ", err)
+					if currentRound.ID > 0 && currentWinnerID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						err = handleRoundEnd(ctx, conn, currentRound.ID, matches[dateIdx], matches[timeIdx], currentWinnerID)
+						if err != nil {
+							log.Println("error handling roundEnd: ", err)
+						}
 					}
 				case "sfuiNotice":
 					matches := rgx.FindStringSubmatch(line)
@@ -160,146 +163,229 @@ func parseFile(r io.Reader, re map[string]*regexp.Regexp) error {
 						log.Println("error handling gameOver: ", err)
 					}
 				case "switchTeam":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					playerNameIdx := rgx.SubexpIndex("playerName")
-					steamIdIdx := rgx.SubexpIndex("steamId")
-					fromTeamIdx := rgx.SubexpIndex("fromTeam")
-					toTeamIdx := rgx.SubexpIndex("toTeam")
-					err = handleSwitchTeam(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[fromTeamIdx], matches[toTeamIdx], currentRound.ID)
-					if err != nil {
-						log.Println("error handling switchTeam: ", err)
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						playerNameIdx := rgx.SubexpIndex("playerName")
+						steamIdIdx := rgx.SubexpIndex("steamId")
+						fromTeamIdx := rgx.SubexpIndex("fromTeam")
+						toTeamIdx := rgx.SubexpIndex("toTeam")
+						err = handleSwitchTeam(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[fromTeamIdx], matches[toTeamIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling switchTeam: ", err)
+						}
 					}
 				case "attacking":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					attackerNameIdx := rgx.SubexpIndex("attackerName")
-					attackerSteamIdIdx := rgx.SubexpIndex("attackerSteamId")
-					attackerTeamIdx := rgx.SubexpIndex("attackerTeam")
-					attackerXIdx := rgx.SubexpIndex("attackerX")
-					attackerYIdx := rgx.SubexpIndex("attackerY")
-					attackerZIdx := rgx.SubexpIndex("attackerZ")
-					attackedNameIdx := rgx.SubexpIndex("attackedName")
-					attackedSteamIdIdx := rgx.SubexpIndex("attackedSteamId")
-					attackedTeamIdx := rgx.SubexpIndex("attackedTeam")
-					attackedXIdx := rgx.SubexpIndex("attackedX")
-					attackedYIdx := rgx.SubexpIndex("attackedY")
-					attackedZIdx := rgx.SubexpIndex("attackedZ")
-					weaponIdx := rgx.SubexpIndex("weapon")
-					damageIdx := rgx.SubexpIndex("damage")
-					damageArmorIdx := rgx.SubexpIndex("damageArmor")
-					healthIdx := rgx.SubexpIndex("health")
-					armorIdx := rgx.SubexpIndex("armor")
-					hitgroupIdx := rgx.SubexpIndex("hitgroup")
-					err = handleAttacking(ctx, conn, matches[dateIdx], matches[timeIdx], matches[attackerNameIdx], matches[attackerSteamIdIdx], matches[attackerTeamIdx], matches[attackerXIdx], matches[attackerYIdx], matches[attackerZIdx], matches[attackedNameIdx], matches[attackedSteamIdIdx], matches[attackedTeamIdx], matches[attackedXIdx], matches[attackedYIdx], matches[attackedZIdx], matches[weaponIdx], matches[damageIdx], matches[damageArmorIdx], matches[healthIdx], matches[armorIdx], matches[hitgroupIdx], currentRound.ID)
-					if err != nil {
-						log.Println("error handling attacking: ", err)
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						attackerNameIdx := rgx.SubexpIndex("attackerName")
+						attackerSteamIdIdx := rgx.SubexpIndex("attackerSteamId")
+						attackerTeamIdx := rgx.SubexpIndex("attackerTeam")
+						attackerXIdx := rgx.SubexpIndex("attackerX")
+						attackerYIdx := rgx.SubexpIndex("attackerY")
+						attackerZIdx := rgx.SubexpIndex("attackerZ")
+						attackedNameIdx := rgx.SubexpIndex("attackedName")
+						attackedSteamIdIdx := rgx.SubexpIndex("attackedSteamId")
+						attackedTeamIdx := rgx.SubexpIndex("attackedTeam")
+						attackedXIdx := rgx.SubexpIndex("attackedX")
+						attackedYIdx := rgx.SubexpIndex("attackedY")
+						attackedZIdx := rgx.SubexpIndex("attackedZ")
+						weaponIdx := rgx.SubexpIndex("weapon")
+						damageIdx := rgx.SubexpIndex("damage")
+						damageArmorIdx := rgx.SubexpIndex("damageArmor")
+						healthIdx := rgx.SubexpIndex("health")
+						armorIdx := rgx.SubexpIndex("armor")
+						hitgroupIdx := rgx.SubexpIndex("hitgroup")
+						err = handleAttacking(ctx, conn, matches[dateIdx], matches[timeIdx], matches[attackerNameIdx], matches[attackerSteamIdIdx], matches[attackerTeamIdx], matches[attackerXIdx], matches[attackerYIdx], matches[attackerZIdx], matches[attackedNameIdx], matches[attackedSteamIdIdx], matches[attackedTeamIdx], matches[attackedXIdx], matches[attackedYIdx], matches[attackedZIdx], matches[weaponIdx], matches[damageIdx], matches[damageArmorIdx], matches[healthIdx], matches[armorIdx], matches[hitgroupIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling attacking: ", err)
+						}
 					}
 				case "killed":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					killerNameIdx := rgx.SubexpIndex("killerName")
-					killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
-					killerTeamIdx := rgx.SubexpIndex("killerTeam")
-					killerXIdx := rgx.SubexpIndex("killerX")
-					killerYIdx := rgx.SubexpIndex("killerY")
-					killerZIdx := rgx.SubexpIndex("killerZ")
-					killedNameIdx := rgx.SubexpIndex("killedName")
-					killedSteamIdIdx := rgx.SubexpIndex("killedSteamId")
-					killedTeamIdx := rgx.SubexpIndex("killedTeam")
-					killedXIdx := rgx.SubexpIndex("killedX")
-					killedYIdx := rgx.SubexpIndex("killedY")
-					killedZIdx := rgx.SubexpIndex("killedZ")
-					killerWeaponIdx := rgx.SubexpIndex("killerWeapon")
-					special := rgx.SubexpIndex("special")
-					err = handleKilled(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killerXIdx], matches[killerYIdx], matches[killerZIdx], matches[killedNameIdx], matches[killedSteamIdIdx], matches[killedTeamIdx], matches[killedXIdx], matches[killedYIdx], matches[killedZIdx], matches[killerWeaponIdx], matches[special], currentRound.ID)
-					if err != nil {
-						log.Println("error handling killed: ", err)
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						killerNameIdx := rgx.SubexpIndex("killerName")
+						killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
+						killerTeamIdx := rgx.SubexpIndex("killerTeam")
+						killerXIdx := rgx.SubexpIndex("killerX")
+						killerYIdx := rgx.SubexpIndex("killerY")
+						killerZIdx := rgx.SubexpIndex("killerZ")
+						killedNameIdx := rgx.SubexpIndex("killedName")
+						killedSteamIdIdx := rgx.SubexpIndex("killedSteamId")
+						killedTeamIdx := rgx.SubexpIndex("killedTeam")
+						killedXIdx := rgx.SubexpIndex("killedX")
+						killedYIdx := rgx.SubexpIndex("killedY")
+						killedZIdx := rgx.SubexpIndex("killedZ")
+						killerWeaponIdx := rgx.SubexpIndex("killerWeapon")
+						special := rgx.SubexpIndex("special")
+						err = handleKilled(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killerXIdx], matches[killerYIdx], matches[killerZIdx], matches[killedNameIdx], matches[killedSteamIdIdx], matches[killedTeamIdx], matches[killedXIdx], matches[killedYIdx], matches[killedZIdx], matches[killerWeaponIdx], matches[special], currentRound.ID)
+						if err != nil {
+							log.Println("error handling killed: ", err)
+						}
 					}
 				case "killedOther":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					killerNameIdx := rgx.SubexpIndex("killerName")
-					killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
-					killerTeamIdx := rgx.SubexpIndex("killerTeam")
-					killerXIdx := rgx.SubexpIndex("killerX")
-					killerYIdx := rgx.SubexpIndex("killerY")
-					killerZIdx := rgx.SubexpIndex("killerZ")
-					killedNameIdx := rgx.SubexpIndex("killedName")
-					killedXIdx := rgx.SubexpIndex("killedX")
-					killedYIdx := rgx.SubexpIndex("killedY")
-					killedZIdx := rgx.SubexpIndex("killedZ")
-					killerWeaponIdx := rgx.SubexpIndex("killerWeapon")
-					err = handleKilledOther(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killerXIdx], matches[killerYIdx], matches[killerZIdx], matches[killedNameIdx], matches[killedXIdx], matches[killedYIdx], matches[killedZIdx], matches[killerWeaponIdx], currentRound.ID)
-					if err != nil {
-						log.Println("error handling killed other: ", err)
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						killerNameIdx := rgx.SubexpIndex("killerName")
+						killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
+						killerTeamIdx := rgx.SubexpIndex("killerTeam")
+						killerXIdx := rgx.SubexpIndex("killerX")
+						killerYIdx := rgx.SubexpIndex("killerY")
+						killerZIdx := rgx.SubexpIndex("killerZ")
+						killedNameIdx := rgx.SubexpIndex("killedName")
+						killedXIdx := rgx.SubexpIndex("killedX")
+						killedYIdx := rgx.SubexpIndex("killedY")
+						killedZIdx := rgx.SubexpIndex("killedZ")
+						killerWeaponIdx := rgx.SubexpIndex("killerWeapon")
+						err = handleKilledOther(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killerXIdx], matches[killerYIdx], matches[killerZIdx], matches[killedNameIdx], matches[killedXIdx], matches[killedYIdx], matches[killedZIdx], matches[killerWeaponIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling killed other: ", err)
+						}
 					}
 				case "assistedKill":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					killerNameIdx := rgx.SubexpIndex("killerName")
-					killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
-					killerTeamIdx := rgx.SubexpIndex("killerTeam")
-					killedNameIdx := rgx.SubexpIndex("killedName")
-					killedSteamIdIdx := rgx.SubexpIndex("killedSteamId")
-					killedTeamIdx := rgx.SubexpIndex("killedTeam")
-					err = handleAssistedKill(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killedNameIdx], matches[killedSteamIdIdx], matches[killedTeamIdx], currentRound.ID)
-					if err != nil {
-						log.Println("error handling assisted kill: ", err)
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						killerNameIdx := rgx.SubexpIndex("killerName")
+						killerSteamIdIdx := rgx.SubexpIndex("killerSteamId")
+						killerTeamIdx := rgx.SubexpIndex("killerTeam")
+						killedNameIdx := rgx.SubexpIndex("killedName")
+						killedSteamIdIdx := rgx.SubexpIndex("killedSteamId")
+						killedTeamIdx := rgx.SubexpIndex("killedTeam")
+						err = handleAssistedKill(ctx, conn, matches[dateIdx], matches[timeIdx], matches[killerNameIdx], matches[killerSteamIdIdx], matches[killerTeamIdx], matches[killedNameIdx], matches[killedSteamIdIdx], matches[killedTeamIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling assisted kill: ", err)
+						}
 					}
 				case "shopping":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					playerNameIdx := rgx.SubexpIndex("playerName")
-					steamIdIdx := rgx.SubexpIndex("steamId")
-					currentTeamIdx := rgx.SubexpIndex("currentTeam")
-					typeIdx := rgx.SubexpIndex("type")
-					itemIdx := rgx.SubexpIndex("item")
-					err = handleItemInteraction(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[currentTeamIdx], matches[typeIdx], matches[itemIdx], currentRound.ID)
-					if err != nil {
-						log.Println("error handling item interaction: ", err)
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						playerNameIdx := rgx.SubexpIndex("playerName")
+						steamIdIdx := rgx.SubexpIndex("steamId")
+						currentTeamIdx := rgx.SubexpIndex("currentTeam")
+						typeIdx := rgx.SubexpIndex("type")
+						itemIdx := rgx.SubexpIndex("item")
+						err = handleItemInteraction(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[currentTeamIdx], matches[typeIdx], matches[itemIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling item interaction: ", err)
+						}
 					}
 				case "moneyChange":
-					matches := rgx.FindStringSubmatch(line)
-					dateIdx := rgx.SubexpIndex("date")
-					timeIdx := rgx.SubexpIndex("time")
-					playerNameIdx := rgx.SubexpIndex("playerName")
-					steamIdIdx := rgx.SubexpIndex("steamId")
-					currentTeamIdx := rgx.SubexpIndex("currentTeam")
-					newTotalIdx := rgx.SubexpIndex("newTotal")
-					itemIdx := rgx.SubexpIndex("item")
-					err = handleMoneyChange(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[currentTeamIdx], matches[newTotalIdx], matches[itemIdx], currentRound.ID)
-					if err != nil {
-						log.Println("error handling money change: ", err)
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						playerNameIdx := rgx.SubexpIndex("playerName")
+						steamIdIdx := rgx.SubexpIndex("steamId")
+						currentTeamIdx := rgx.SubexpIndex("currentTeam")
+						newTotalIdx := rgx.SubexpIndex("newTotal")
+						itemIdx := rgx.SubexpIndex("item")
+						err = handleMoneyChange(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[currentTeamIdx], matches[newTotalIdx], matches[itemIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling money change: ", err)
+						}
 					}
 				case "suicide":
-					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" \[(?P<suicideX>-?\d+) (?P<suicideY>-?\d+) (?P<suicideZ>-?\d+)] committed suicide with "(?P<item>[^"]+)"$`)
-					fmt.Println("suicide")
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						playerNameIdx := rgx.SubexpIndex("playerName")
+						steamIdIdx := rgx.SubexpIndex("steamId")
+						currentTeamIdx := rgx.SubexpIndex("currentTeam")
+						suicideXIdx := rgx.SubexpIndex("suicideX")
+						suicideYIdx := rgx.SubexpIndex("suicideY")
+						suicideZIdx := rgx.SubexpIndex("suicideZ")
+						itemIdx := rgx.SubexpIndex("item")
+						err = handleSuicide(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[currentTeamIdx], matches[suicideXIdx], matches[suicideYIdx], matches[suicideZIdx], matches[itemIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling player suicide: ", err)
+						}
+					}
 				case "triggered":
-					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" triggered "(?P<event>[^"]+)"$`)
-					fmt.Println("triggered")
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						playerNameIdx := rgx.SubexpIndex("playerName")
+						steamIdIdx := rgx.SubexpIndex("steamId")
+						currentTeamIdx := rgx.SubexpIndex("currentTeam")
+						eventIdx := rgx.SubexpIndex("event")
+						bombsiteIdx := rgx.SubexpIndex("bombsite")
+						err = handleTriggered(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[currentTeamIdx], matches[eventIdx], matches[bombsiteIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling triggered event: ", err)
+						}
+					}
 				case "threw":
-					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<playerSteamId>BOT|STEAM[^>]+)><(?P<playerTeam>CT|TERRORIST)>" threw (?P<object>\S+) \[(?P<playerX>-?\d+) (?P<playerY>-?\d+) (?P<playerZ>-?\d+)]( flashbang entindex \d+)?$`)
-					// L 10/25/2022 - 19:18:34: "Kronborg<48><STEAM_1:1:54462286><CT>" threw hegrenade [-1773 -42 54]
-					fmt.Println("threw")
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						playerNameIdx := rgx.SubexpIndex("playerName")
+						steamIdIdx := rgx.SubexpIndex("playerSteamId")
+						teamIdx := rgx.SubexpIndex("playerTeam")
+						objectIdx := rgx.SubexpIndex("object")
+						playerXIdx := rgx.SubexpIndex("playerX")
+						playerYIdx := rgx.SubexpIndex("playerY")
+						playerZIdx := rgx.SubexpIndex("playerZ")
+						entindexIdx := rgx.SubexpIndex("entindex")
+						err = handleThrew(ctx, conn, matches[dateIdx], matches[timeIdx], matches[playerNameIdx], matches[steamIdIdx], matches[teamIdx], matches[objectIdx], matches[playerXIdx], matches[playerYIdx], matches[playerZIdx], matches[entindexIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling player threw: ", err)
+						}
+					}
 				case "blinded":
-					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<blindedName>[^<]+)<\d+><(?P<blindedSteamId>BOT|STEAM[^>]+)><(?P<blindedTeam>CT|TERRORIST)>" blinded for (?P<blindedTime>\S+) by "(?P<byName>[^<]+)<\d+><(?P<bySteamId>BOT|STEAM[^>]+)><(?P<byTeam>CT|TERRORIST)>" from flashbang entindex \d+$`)
-					fmt.Println("blinded")
+					if currentRound.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						blindedNameIdx := rgx.SubexpIndex("blindedName")
+						blindedSteamIdIdx := rgx.SubexpIndex("blindedSteamId")
+						blindedTeamIdx := rgx.SubexpIndex("blindedTeam")
+						blindedTimeIdx := rgx.SubexpIndex("blindedTime")
+						byNameIdx := rgx.SubexpIndex("byName")
+						bySteamIdIdx := rgx.SubexpIndex("bySteamId")
+						byTeamIdx := rgx.SubexpIndex("byTeam")
+						entindexIdx := rgx.SubexpIndex("entindex")
+						err = handleBlinded(ctx, conn, matches[dateIdx], matches[timeIdx], matches[blindedNameIdx], matches[blindedSteamIdIdx], matches[blindedTeamIdx], matches[blindedTimeIdx], matches[byNameIdx], matches[bySteamIdIdx], matches[byTeamIdx], matches[entindexIdx], currentRound.ID)
+						if err != nil {
+							log.Println("error handling player blinded: ", err)
+						}
+					}
+				case "accolade":
+					if currentMatch.ID > 0 {
+						matches := rgx.FindStringSubmatch(line)
+						dateIdx := rgx.SubexpIndex("date")
+						timeIdx := rgx.SubexpIndex("time")
+						nameIdx := rgx.SubexpIndex("name")
+						playerNameIdx := rgx.SubexpIndex("playerName")
+						valueIdx := rgx.SubexpIndex("value")
+						positionIdx := rgx.SubexpIndex("position")
+						scoreIdx := rgx.SubexpIndex("score")
+						err = handleAccolade(ctx, conn, matches[dateIdx], matches[timeIdx], matches[nameIdx], matches[playerNameIdx], matches[valueIdx], matches[positionIdx], matches[scoreIdx], currentMatch.ID)
+						if err != nil {
+							log.Println("error handling player accolade: ", err)
+						}
+					}
 				case "leftBuyZone":
 					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" left buyzone with \[(?P<items>[^]])]$`)
 					fmt.Println("leftBuyZone")
-				case "accolade":
-					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): ACCOLADE, FINAL: \{(?P<name>\w+)},\s+(?P<playerName>[^<]+)<\d+>,\s+VALUE: (?P<value>\d+\.\d+),\s+POS:\s+(?P<position>[^,]+),\s+SCORE: (?P<score>\d+\.\d+)$`)
-					fmt.Println("accolade")
 				case "disconnected":
 					// (?P<date>\d{2}/\d{2}/\d{4}) - (?P<time>\d{2}:\d{2}:\d{2}): "(?P<playerName>[^<]+)<\d+><(?P<steamId>BOT|STEAM[^>]+)><(?P<currentTeam>CT|TERRORIST)>" disconnected \(reason "(?P<reason>[^"]+)"\)$`)
 					fmt.Println("disconnected")
+				case "matchStatus":
+					fmt.Println("matchStatus")
 				default:
 					fmt.Println("No match found for line: ", line)
 				}
@@ -1358,7 +1444,6 @@ func handleItemInteraction(ctx context.Context, conn *pgx.Conn, dateStr string, 
 }
 
 func handleMoneyChange(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, playerName string, steamId string, team string, newTotal string, item string, roundId int64) error {
-	fmt.Printf("playerName: %s, newTotal: %s, item: %s", playerName, newTotal, item)
 	dbDate, err := parseDate(dateStr)
 	if err != nil {
 		return err
@@ -1442,6 +1527,486 @@ func handleMoneyChange(ctx context.Context, conn *pgx.Conn, dateStr string, time
 			})
 			if err4 != nil {
 				return err4
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleSuicide(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, playerName string, steamId string, team string, suicideX string, suicideY string, suicideZ string, item string, roundId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	steamUser, err := queries.GetSteamUserBySteamId(ctx, steamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if steamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(steamId)
+				if err != nil {
+					return err
+				}
+			}
+			steamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          steamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	player, err := queries.GetPlayerByName(ctx, playerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if steamId == "BOT" {
+				bot = true
+			}
+			player, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        playerName,
+				SteamUserID: pgtype.Int8{Int64: steamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	itemId, err := getItemID(ctx, conn, item)
+	if err != nil {
+		return err
+	}
+	_, err = queries.GetPlayerSuicideByPlayerItemRoundDateTime(ctx, database.GetPlayerSuicideByPlayerItemRoundDateTimeParams{
+		PlayerID:    pgtype.Int8{Int64: player.ID, Valid: true},
+		WithItemID:  pgtype.Int8{Int64: itemId, Valid: true},
+		RoundID:     pgtype.Int8{Int64: roundId, Valid: true},
+		SuicideDate: dbDate,
+		SuicideTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			teamId, err2 := getTeamID(ctx, conn, team)
+			if err2 != nil {
+				return err2
+			}
+			suicideXint, err3 := strconv.ParseInt(suicideX, 10, 32)
+			if err3 != nil {
+				return err3
+			}
+			suicideYint, err4 := strconv.ParseInt(suicideY, 10, 32)
+			if err4 != nil {
+				return err4
+			}
+			suicideZint, err5 := strconv.ParseInt(suicideZ, 10, 32)
+			if err5 != nil {
+				return err5
+			}
+			_, err6 := queries.CreatePlayerSuicide(ctx, database.CreatePlayerSuicideParams{
+				PlayerID:        pgtype.Int8{Int64: player.ID, Valid: true},
+				RoundID:         pgtype.Int8{Int64: roundId, Valid: true},
+				SuicideTime:     dbTime,
+				SuicideDate:     dbDate,
+				TeamID:          pgtype.Int8{Int64: teamId, Valid: true},
+				PlayerPositionX: int32(suicideXint),
+				PlayerPositionY: int32(suicideYint),
+				PlayerPositionZ: int32(suicideZint),
+				WithItemID:      pgtype.Int8{Int64: itemId, Valid: true},
+			})
+			if err6 != nil {
+				return err6
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleTriggered(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, playerName string, steamId string, team string, event string, bombsite string, roundId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	steamUser, err := queries.GetSteamUserBySteamId(ctx, steamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if steamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(steamId)
+				if err != nil {
+					return err
+				}
+			}
+			steamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          steamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	player, err := queries.GetPlayerByName(ctx, playerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if steamId == "BOT" {
+				bot = true
+			}
+			player, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        playerName,
+				SteamUserID: pgtype.Int8{Int64: steamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	eventId, err := getEventID(ctx, conn, event)
+	if err != nil {
+		return err
+	}
+	_, err = queries.GetTriggeredEventByPlayerEventRoundDateTime(ctx, database.GetTriggeredEventByPlayerEventRoundDateTimeParams{
+		PlayerID:  pgtype.Int8{Int64: player.ID, Valid: true},
+		EventID:   pgtype.Int8{Int64: eventId, Valid: true},
+		RoundID:   pgtype.Int8{Int64: roundId, Valid: true},
+		EventDate: dbDate,
+		EventTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			teamId, err2 := getTeamID(ctx, conn, team)
+			if err2 != nil {
+				return err2
+			}
+			_, err3 := queries.CreateTriggeredEvent(ctx, database.CreateTriggeredEventParams{
+				PlayerID:  pgtype.Int8{Int64: player.ID, Valid: true},
+				TeamID:    pgtype.Int8{Int64: teamId, Valid: true},
+				RoundID:   pgtype.Int8{Int64: roundId, Valid: true},
+				EventID:   pgtype.Int8{Int64: eventId, Valid: true},
+				EventTime: dbTime,
+				EventDate: dbDate,
+				Bombsite:  bombsite,
+			})
+			if err3 != nil {
+				return err3
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleThrew(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, playerName string, steamId string, team string, object string, playerX string, playerY string, playerZ string, entindex string, roundId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	steamUser, err := queries.GetSteamUserBySteamId(ctx, steamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if steamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(steamId)
+				if err != nil {
+					return err
+				}
+			}
+			steamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          steamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	player, err := queries.GetPlayerByName(ctx, playerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this player name so create it in the database
+			bot := false
+			if steamId == "BOT" {
+				bot = true
+			}
+			player, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        playerName,
+				SteamUserID: pgtype.Int8{Int64: steamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	weaponId, err := getWeaponID(ctx, conn, object)
+	if err != nil {
+		return err
+	}
+	_, err = queries.GetThrewByPlayerWeaponRoundDateTime(ctx, database.GetThrewByPlayerWeaponRoundDateTimeParams{
+		PlayerID:  pgtype.Int8{Int64: player.ID, Valid: true},
+		WeaponID:  pgtype.Int8{Int64: weaponId, Valid: true},
+		RoundID:   pgtype.Int8{Int64: roundId, Valid: true},
+		ThrewDate: dbDate,
+		ThrewTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			teamId, err2 := getTeamID(ctx, conn, team)
+			if err2 != nil {
+				return err2
+			}
+			playerXint, err3 := strconv.ParseInt(playerX, 10, 32)
+			if err3 != nil {
+				return err3
+			}
+			playerYint, err4 := strconv.ParseInt(playerY, 10, 32)
+			if err4 != nil {
+				return err4
+			}
+			playerZint, err5 := strconv.ParseInt(playerZ, 10, 32)
+			if err5 != nil {
+				return err5
+			}
+			entindexint, err6 := strconv.ParseInt(entindex, 10, 32)
+			if err6 != nil {
+				entindexint = 0
+			}
+			_, err7 := queries.CreateThrew(ctx, database.CreateThrewParams{
+				PlayerID:  pgtype.Int8{Int64: player.ID, Valid: true},
+				TeamID:    pgtype.Int8{Int64: teamId, Valid: true},
+				RoundID:   pgtype.Int8{Int64: roundId, Valid: true},
+				ThrewDate: dbDate,
+				ThrewTime: dbTime,
+				PositionX: int32(playerXint),
+				PositionY: int32(playerYint),
+				PositionZ: int32(playerZint),
+				WeaponID:  pgtype.Int8{Int64: weaponId, Valid: true},
+				Entindex:  int32(entindexint),
+			})
+			if err7 != nil {
+				return err7
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleBlinded(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, blindedPlayerName string, blindedSteamId string, blindedTeam string, blindedTime string, byName string, bySteamId string, byTeam string, entindex string, roundId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	blindedSteamUser, err := queries.GetSteamUserBySteamId(ctx, blindedSteamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if blindedSteamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(blindedSteamId)
+				if err != nil {
+					return err
+				}
+			}
+			blindedSteamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          blindedSteamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	blindedPlayer, err := queries.GetPlayerByName(ctx, blindedPlayerName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this blindedPlayer name so create it in the database
+			bot := false
+			if blindedSteamId == "BOT" {
+				bot = true
+			}
+			blindedPlayer, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        blindedPlayerName,
+				SteamUserID: pgtype.Int8{Int64: blindedSteamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	blindedBySteamUser, err := queries.GetSteamUserBySteamId(ctx, bySteamId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this steam user so create it in the database
+			steamCommunityID := int64(0)
+			if bySteamId != "BOT" {
+				steamCommunityID, err = calculateSteamCommunityId(bySteamId)
+				if err != nil {
+					return err
+				}
+			}
+			blindedBySteamUser, err = queries.CreateSteamUser(ctx, database.CreateSteamUserParams{
+				SteamID:          bySteamId,
+				SteamCommunityID: steamCommunityID,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	blindedByPlayer, err := queries.GetPlayerByName(ctx, byName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// First time we see this blindedPlayer name so create it in the database
+			bot := false
+			if bySteamId == "BOT" {
+				bot = true
+			}
+			blindedByPlayer, err = queries.CreatePlayer(ctx, database.CreatePlayerParams{
+				Name:        byName,
+				SteamUserID: pgtype.Int8{Int64: blindedBySteamUser.ID, Valid: true},
+				Bot:         pgtype.Bool{Bool: bot, Valid: true},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	_, err = queries.GetBlindedByPlayerRoundDateTime(ctx, database.GetBlindedByPlayerRoundDateTimeParams{
+		BlindedID:   pgtype.Int8{Int64: blindedPlayer.ID, Valid: true},
+		RoundID:     pgtype.Int8{Int64: roundId, Valid: true},
+		BlindedDate: dbDate,
+		BlindedTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			blindedTeamId, err2 := getTeamID(ctx, conn, blindedTeam)
+			if err2 != nil {
+				return err2
+			}
+			blindedByTeamId, err3 := getTeamID(ctx, conn, byTeam)
+			if err3 != nil {
+				return err3
+			}
+			entindexint, err5 := strconv.ParseInt(entindex, 10, 32)
+			if err5 != nil {
+				entindexint = 0
+			}
+			_, err6 := queries.CreateBlinded(ctx, database.CreateBlindedParams{
+				BlindedID:       pgtype.Int8{Int64: blindedPlayer.ID, Valid: true},
+				BlindedTeamID:   pgtype.Int8{Int64: blindedTeamId, Valid: true},
+				BlindedByID:     pgtype.Int8{Int64: blindedByPlayer.ID, Valid: true},
+				BlindedByTeamID: pgtype.Int8{Int64: blindedByTeamId, Valid: true},
+				RoundID:         pgtype.Int8{Int64: roundId, Valid: true},
+				BlindedDate:     dbDate,
+				BlindedTime:     dbTime,
+				BlindedFor:      blindedTime,
+				Entindex:        int32(entindexint),
+			})
+			if err6 != nil {
+				return err6
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleAccolade(ctx context.Context, conn *pgx.Conn, dateStr string, timeStr string, name string, playerName string, value string, position string, score string, matchId int64) error {
+	dbDate, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+	dbTime, err := parseTime(dateStr, timeStr)
+	if err != nil {
+		return err
+	}
+	queries := database.New(conn)
+	player, err := queries.GetPlayerByName(ctx, playerName)
+	if err != nil {
+		// We only have the player name, so if it is not found we return an error
+		return err
+	}
+	_, err = queries.GetAccoladeByNamePlayerMatchDateTime(ctx, database.GetAccoladeByNamePlayerMatchDateTimeParams{
+		AccoladeName: name,
+		PlayerID:     pgtype.Int8{Int64: player.ID, Valid: true},
+		MatchID:      pgtype.Int8{Int64: matchId, Valid: true},
+		AccoladeDate: dbDate,
+		AccoladeTime: dbTime,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			positionint, err2 := strconv.ParseInt(position, 10, 32)
+			if err2 != nil {
+				return err2
+			}
+			_, err3 := queries.CreateAccolade(ctx, database.CreateAccoladeParams{
+				PlayerID:      pgtype.Int8{Int64: player.ID, Valid: true},
+				MatchID:       pgtype.Int8{Int64: matchId, Valid: true},
+				AccoladeDate:  dbDate,
+				AccoladeTime:  dbTime,
+				AccoladeName:  name,
+				AccoladeValue: value,
+				AccoladePos:   int32(positionint),
+				AccoladeScore: score,
+			})
+			if err3 != nil {
+				return err3
 			}
 		} else {
 			return err

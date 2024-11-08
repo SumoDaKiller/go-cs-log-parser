@@ -320,4 +320,43 @@ select * from triggered_events where id = $1 limit 1;
 select * from triggered_events where player_id = $1 and event_id = $2 and round_id = $3 and event_date = $4 and event_time = $5 limit 1;
 
 -- name: CreateTriggeredEvent :one
-insert into triggered_events (player_id, team_id, round_id, event_id, event_time, event_date) values ($1, $2, $3, $4, $5, $6) returning *;
+insert into triggered_events (player_id, team_id, round_id, event_id, event_time, event_date, bombsite) values ($1, $2, $3, $4, $5, $6, $7) returning *;
+
+-- --------------------
+-- Player Threw
+-- --------------------
+
+-- name: GetThrew :one
+select * from threw where id = $1 limit 1;
+
+-- name: GetThrewByPlayerWeaponRoundDateTime :one
+select * from threw where player_id = $1 and weapon_id = $2 and round_id = $3 and threw_date = $4 and threw_time = $5 limit 1;
+
+-- name: CreateThrew :one
+insert into threw (player_id, team_id, round_id, threw_time, threw_date, position_x, position_y, position_z, weapon_id, entindex) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *;
+
+-- --------------------
+-- Player Blinded
+-- --------------------
+
+-- name: GetBlinded :one
+select * from blinded where id = $1 limit 1;
+
+-- name: GetBlindedByPlayerRoundDateTime :one
+select * from blinded where blinded_id = $1 and round_id = $2 and blinded_date = $3 and blinded_time= $4 limit 1;
+
+-- name: CreateBlinded :one
+insert into blinded (blinded_id, blinded_team_id, blinded_by_id, blinded_by_team_id, round_id, blinded_date, blinded_time, blinded_for, entindex) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;
+
+-- --------------------
+-- Accolade
+-- --------------------
+
+-- name: GetAccolade :one
+select * from accolade where id = $1 limit 1;
+
+-- name: GetAccoladeByNamePlayerMatchDateTime :one
+select * from accolade where accolade_name = $1 and player_id = $2 and match_id = $3 and accolade_date = $4 and accolade_time = $5 limit 1;
+
+-- name: CreateAccolade :one
+insert into accolade (player_id, match_id, accolade_date, accolade_time, accolade_name, accolade_value, accolade_pos, accolade_score) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *;

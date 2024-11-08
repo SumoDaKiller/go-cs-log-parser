@@ -8,6 +8,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Accolade struct {
+	ID            int64
+	PlayerID      pgtype.Int8
+	MatchID       pgtype.Int8
+	AccoladeTime  pgtype.Time
+	AccoladeDate  pgtype.Date
+	AccoladeName  string
+	AccoladeValue string
+	AccoladePos   int32
+	AccoladeScore string
+}
+
 type Attack struct {
 	ID                int64
 	AttackerID        pgtype.Int8
@@ -29,6 +41,19 @@ type Attack struct {
 	Health            int32
 	Armor             int32
 	HitGroupID        pgtype.Int8
+}
+
+type Blinded struct {
+	ID              int64
+	BlindedID       pgtype.Int8
+	BlindedByID     pgtype.Int8
+	RoundID         pgtype.Int8
+	BlindedTime     pgtype.Time
+	BlindedDate     pgtype.Date
+	BlindedTeamID   pgtype.Int8
+	BlindedByTeamID pgtype.Int8
+	BlindedFor      string
+	Entindex        int32
 }
 
 type Event struct {
@@ -210,6 +235,20 @@ type TeamSwitch struct {
 	RoundID    pgtype.Int8
 }
 
+type Threw struct {
+	ID        int64
+	PlayerID  pgtype.Int8
+	TeamID    pgtype.Int8
+	RoundID   pgtype.Int8
+	ThrewTime pgtype.Time
+	ThrewDate pgtype.Date
+	PositionX int32
+	PositionY int32
+	PositionZ int32
+	WeaponID  pgtype.Int8
+	Entindex  int32
+}
+
 type TriggeredEvent struct {
 	ID        int64
 	PlayerID  pgtype.Int8
@@ -218,6 +257,7 @@ type TriggeredEvent struct {
 	EventID   pgtype.Int8
 	EventTime pgtype.Time
 	EventDate pgtype.Date
+	Bombsite  string
 }
 
 type Weapon struct {

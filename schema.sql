@@ -145,7 +145,8 @@ CREATE TABLE IF NOT EXISTS triggered_events (
     round_id BIGINT references rounds(id),
     event_id BIGINT references events(id),
     event_time time not null,
-    event_date date not null
+    event_date date not null,
+    bombsite char(1) not null
 );
 
 CREATE TABLE IF NOT EXISTS kills (
@@ -216,4 +217,43 @@ CREATE TABLE IF NOT EXISTS attacks (
     health INT not null,
     armor INT not null,
     hit_group_id BIGINT references hit_groups(id)
+);
+
+CREATE TABLE IF NOT EXISTS threw (
+    id BIGSERIAL PRIMARY KEY,
+    player_id BIGINT references players(id),
+    team_id BIGINT references teams(id),
+    round_id BIGINT references rounds(id),
+    threw_time time not null,
+    threw_date date not null,
+    position_x INT not null,
+    position_y INT not null,
+    position_z INT not null,
+    weapon_id BIGINT references weapons(id),
+    entindex INT not null
+);
+
+CREATE TABLE IF NOT EXISTS blinded (
+    id BIGSERIAL PRIMARY KEY,
+    blinded_id BIGINT references players(id),
+    blinded_by_id BIGINT references players(id),
+    round_id BIGINT references rounds(id),
+    blinded_time time not null,
+    blinded_date date not null,
+    blinded_team_id BIGINT references teams(id),
+    blinded_by_team_id BIGINT references teams(id),
+    blinded_for varchar(20) not null,
+    entindex INT not null
+);
+
+CREATE TABLE IF NOT EXISTS accolade (
+    id BIGSERIAL PRIMARY KEY,
+    player_id BIGINT references players(id),
+    match_id BIGINT references matches(id),
+    accolade_time time not null,
+    accolade_date date not null,
+    accolade_name varchar(50) not null,
+    accolade_value varchar(20) not null,
+    accolade_pos INT not null,
+    accolade_score varchar(20) not null
 );
