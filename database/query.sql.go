@@ -838,6 +838,60 @@ func (q *Queries) GetAccoladeByNamePlayerMatchDateTime(ctx context.Context, arg 
 	return i, err
 }
 
+const getAccoladeForPlayer = `-- name: GetAccoladeForPlayer :many
+select p.id, p.steam_user_id, p.name, su.steam_id, su.steam_community_id, a.accolade_time, a.accolade_date, a.accolade_name, a.accolade_value, a.accolade_score, a.accolade_pos, apn.pretty_name, apn.description from players p, steam_users su, accolade a, accolade_pretty_names apn where p.id=$1 and p.steam_user_id=su.id and a.player_id=p.id and a.accolade_name=apn.accolade_name  order by a.accolade_date
+`
+
+type GetAccoladeForPlayerRow struct {
+	ID               int64
+	SteamUserID      pgtype.Int8
+	Name             string
+	SteamID          string
+	SteamCommunityID int64
+	AccoladeTime     pgtype.Time
+	AccoladeDate     pgtype.Date
+	AccoladeName     string
+	AccoladeValue    string
+	AccoladeScore    string
+	AccoladePos      int32
+	PrettyName       string
+	Description      string
+}
+
+func (q *Queries) GetAccoladeForPlayer(ctx context.Context, id int64) ([]GetAccoladeForPlayerRow, error) {
+	rows, err := q.db.Query(ctx, getAccoladeForPlayer, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAccoladeForPlayerRow
+	for rows.Next() {
+		var i GetAccoladeForPlayerRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.SteamUserID,
+			&i.Name,
+			&i.SteamID,
+			&i.SteamCommunityID,
+			&i.AccoladeTime,
+			&i.AccoladeDate,
+			&i.AccoladeName,
+			&i.AccoladeValue,
+			&i.AccoladeScore,
+			&i.AccoladePos,
+			&i.PrettyName,
+			&i.Description,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAttack = `-- name: GetAttack :one
 
 select id, attacker_id, attacked_id, round_id, attack_time, attack_date, attacker_team_id, attacked_team_id, attacker_position_x, attacker_position_y, attacker_position_z, attacked_position_x, attacked_position_y, attacked_position_z, attacker_weapon_id, damage, damage_armor, health, armor, hit_group_id from attacks where id = $1 limit 1
@@ -1632,6 +1686,65 @@ func (q *Queries) GetPlayerSuicideByPlayerItemRoundDateTime(ctx context.Context,
 	return i, err
 }
 
+const getPlayerWithStats = `-- name: GetPlayerWithStats :one
+select p.id, p.steam_user_id, p.name, su.steam_id, su.steam_community_id,
+       (select count(*) from round_teams rt, teams t where rt.player_id=p.id and rt.team_id=t.id and t.name in ('CT', 'TERRORIST')) as rounds,
+       (select count(*) from round_teams rt, teams t where rt.player_id=p.id and rt.team_id=t.id and t.name='TERRORIST') as rounds_t,
+       (select count(*) from round_teams rt, teams t where rt.player_id=p.id and rt.team_id=t.id and t.name='CT') as rounds_ct,
+       (select count(*) from kills where killer_id=p.id) as kills,
+       (select count(*) from kills where killed_id=p.id) as killed,
+       (select count(*) from kills k, special_kills sk where k.killer_id=p.id and k.special_id=sk.id and sk.name='headshot') as headshot_kills,
+       (select count(*) from kills k, special_kills sk where k.killer_id=p.id and k.special_id=sk.id and sk.name='noscope') as noscope_kills,
+       (select count(*) from kills k, special_kills sk where k.killer_id=p.id and k.special_id=sk.id and sk.name='throughsmoke') as throughsmoke_kills,
+       (select count(*) from player_suicide where player_id=p.id) as suicides,
+       (select count(*) from triggered_events te, events e where te.player_id=p.id and te.event_id=e.id and e.name='Planted_The_Bomb') as bomb_plants,
+       (select count(*) from triggered_events te, events e where te.player_id=p.id and te.event_id=e.id and e.name='Defused_The_Bomb') as bomb_defuses
+from players p, steam_users su where p.id=$1 and p.steam_user_id=su.id limit 1
+`
+
+type GetPlayerWithStatsRow struct {
+	ID                int64
+	SteamUserID       pgtype.Int8
+	Name              string
+	SteamID           string
+	SteamCommunityID  int64
+	Rounds            int64
+	RoundsT           int64
+	RoundsCt          int64
+	Kills             int64
+	Killed            int64
+	HeadshotKills     int64
+	NoscopeKills      int64
+	ThroughsmokeKills int64
+	Suicides          int64
+	BombPlants        int64
+	BombDefuses       int64
+}
+
+func (q *Queries) GetPlayerWithStats(ctx context.Context, id int64) (GetPlayerWithStatsRow, error) {
+	row := q.db.QueryRow(ctx, getPlayerWithStats, id)
+	var i GetPlayerWithStatsRow
+	err := row.Scan(
+		&i.ID,
+		&i.SteamUserID,
+		&i.Name,
+		&i.SteamID,
+		&i.SteamCommunityID,
+		&i.Rounds,
+		&i.RoundsT,
+		&i.RoundsCt,
+		&i.Kills,
+		&i.Killed,
+		&i.HeadshotKills,
+		&i.NoscopeKills,
+		&i.ThroughsmokeKills,
+		&i.Suicides,
+		&i.BombPlants,
+		&i.BombDefuses,
+	)
+	return i, err
+}
+
 const getRound = `-- name: GetRound :one
 
 select id, start_date, start_time, end_date, end_time, match_id, winner_team_id from rounds where id = $1 limit 1
@@ -1993,6 +2106,192 @@ func (q *Queries) GetWeaponByName(ctx context.Context, name string) (Weapon, err
 	var i Weapon
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
+}
+
+const listAllPlayers = `-- name: ListAllPlayers :many
+select p.id as id, p.steam_user_id as steam_user_id, p.name as name, su.steam_id as steam_id, su.steam_community_id as steam_community_id from players p, steam_users su where p.steam_user_id=su.id order by su.steam_community_id
+`
+
+type ListAllPlayersRow struct {
+	ID               int64
+	SteamUserID      pgtype.Int8
+	Name             string
+	SteamID          string
+	SteamCommunityID int64
+}
+
+func (q *Queries) ListAllPlayers(ctx context.Context) ([]ListAllPlayersRow, error) {
+	rows, err := q.db.Query(ctx, listAllPlayers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAllPlayersRow
+	for rows.Next() {
+		var i ListAllPlayersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.SteamUserID,
+			&i.Name,
+			&i.SteamID,
+			&i.SteamCommunityID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listBots = `-- name: ListBots :many
+select p.id as id, p.steam_user_id as steam_user_id, p.name as name, su.steam_id as steam_id, su.steam_community_id as steam_community_id from players p, steam_users su where p.bot=true and p.steam_user_id=su.id order by su.steam_community_id
+`
+
+type ListBotsRow struct {
+	ID               int64
+	SteamUserID      pgtype.Int8
+	Name             string
+	SteamID          string
+	SteamCommunityID int64
+}
+
+func (q *Queries) ListBots(ctx context.Context) ([]ListBotsRow, error) {
+	rows, err := q.db.Query(ctx, listBots)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListBotsRow
+	for rows.Next() {
+		var i ListBotsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.SteamUserID,
+			&i.Name,
+			&i.SteamID,
+			&i.SteamCommunityID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMaps = `-- name: ListMaps :many
+select id, name from maps order by name
+`
+
+func (q *Queries) ListMaps(ctx context.Context) ([]Map, error) {
+	rows, err := q.db.Query(ctx, listMaps)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Map
+	for rows.Next() {
+		var i Map
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPlayers = `-- name: ListPlayers :many
+select p.id as id, p.steam_user_id as steam_user_id, p.name as name, su.steam_id as steam_id, su.steam_community_id as steam_community_id from players p, steam_users su where p.bot=false and p.steam_user_id=su.id order by su.steam_community_id
+`
+
+type ListPlayersRow struct {
+	ID               int64
+	SteamUserID      pgtype.Int8
+	Name             string
+	SteamID          string
+	SteamCommunityID int64
+}
+
+func (q *Queries) ListPlayers(ctx context.Context) ([]ListPlayersRow, error) {
+	rows, err := q.db.Query(ctx, listPlayers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPlayersRow
+	for rows.Next() {
+		var i ListPlayersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.SteamUserID,
+			&i.Name,
+			&i.SteamID,
+			&i.SteamCommunityID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSteamUsers = `-- name: ListSteamUsers :many
+select id, steam_id, steam_community_id from steam_users order by steam_community_id
+`
+
+func (q *Queries) ListSteamUsers(ctx context.Context) ([]SteamUser, error) {
+	rows, err := q.db.Query(ctx, listSteamUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SteamUser
+	for rows.Next() {
+		var i SteamUser
+		if err := rows.Scan(&i.ID, &i.SteamID, &i.SteamCommunityID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTeams = `-- name: ListTeams :many
+select id, name from teams order by name
+`
+
+func (q *Queries) ListTeams(ctx context.Context) ([]Team, error) {
+	rows, err := q.db.Query(ctx, listTeams)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Team
+	for rows.Next() {
+		var i Team
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateMatch = `-- name: UpdateMatch :exec

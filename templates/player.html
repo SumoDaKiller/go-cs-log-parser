@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Player.Name}}</title>
+</head>
+<body>
+<table>
+    <tr>
+        <th>Name</th>
+        <td>{{.Player.Name}}</td>
+    </tr>
+    <tr>
+        <th>Steam Community ID</th>
+        <td><a href="https://steamcommunity.com/profiles/{{.Player.SteamCommunityID}}">{{.Player.SteamCommunityID}}</a></td>
+    </tr>
+    <tr>
+        <th>Total Rounds Played</th>
+        <td>{{.Player.Rounds}}</td>
+    </tr>
+    <tr>
+        <th>Total Rounds Played as Terrorist</th>
+        <td>{{.Player.RoundsT}}</td>
+    </tr>
+    <tr>
+        <th>Total Rounds Played as CT</th>
+        <td>{{.Player.RoundsCt}}</td>
+    </tr>
+    <tr>
+        <th>Total Kílls</th>
+        <td>{{.Player.Kills}}</td>
+    </tr>
+    <tr>
+        <th>Total Killed (Deaths)</th>
+        <td>{{.Player.Killed}}</td>
+    </tr>
+    <tr>
+        <th>Total Headshot Kills</th>
+        <td>{{.Player.HeadshotKills}}</td>
+    </tr>
+    <tr>
+        <th>Total No Scope Kills</th>
+        <td>{{.Player.NoscopeKills}}</td>
+    </tr>
+    <tr>
+        <th>Total Kills Through Smoke</th>
+        <td>{{.Player.ThroughsmokeKills}}</td>
+    </tr>
+    <tr>
+        <th>Total Bomb Plants</th>
+        <td>{{.Player.BombPlants}}</td>
+    </tr>
+    <tr>
+        <th>Total Bomb Defuses</th>
+        <td>{{.Player.BombDefuses}}</td>
+    </tr>
+    <tr>
+        <th>Total Suicides</th>
+        <td>{{.Player.Suicides}}</td>
+    </tr>
+</table>
+<table>
+    {{range .PlayerAccolade}}
+    <tr>
+        <th>{{.PrettyName}}</th>
+        <td>{{.Description}}: {{.AccoladeValue}}</td>
+        <td>{{.AccoladeDate.Time.Format "Jan 02, 2006"}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>

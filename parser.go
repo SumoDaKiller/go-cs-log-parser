@@ -731,6 +731,17 @@ func handleSwitchTeam(ctx context.Context, conn *pgx.Conn, dateStr string, timeS
 				SwitchTime: dbTime,
 				RoundID:    pgtype.Int8{Int64: roundID, Valid: true},
 			})
+			if err != nil {
+				return err
+			}
+			_, err4 := queries.CreateRoundTeamEntry(ctx, database.CreateRoundTeamEntryParams{
+				PlayerID: pgtype.Int8{Int64: player.ID, Valid: true},
+				TeamID:   pgtype.Int8{Int64: toTeamID, Valid: true},
+				RoundID:  pgtype.Int8{Int64: roundID, Valid: true},
+			})
+			if err4 != nil {
+				return err4
+			}
 		} else {
 			return err
 		}

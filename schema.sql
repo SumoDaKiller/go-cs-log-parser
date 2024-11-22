@@ -257,3 +257,10 @@ CREATE TABLE IF NOT EXISTS accolade (
     accolade_pos INT not null,
     accolade_score varchar(20) not null
 );
+
+CREATE TABLE IF NOT EXISTS accolade_pretty_names (
+    id BIGINT PRIMARY KEY,
+    accolade_name varchar(50) not null,
+    pretty_name varchar(255) not null,
+    description varchar(255) not null
+);

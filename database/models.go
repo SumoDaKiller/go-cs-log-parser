@@ -20,6 +20,13 @@ type Accolade struct {
 	AccoladeScore string
 }
 
+type AccoladePrettyName struct {
+	ID           int64
+	AccoladeName string
+	PrettyName   string
+	Description  string
+}
+
 type Attack struct {
 	ID                int64
 	AttackerID        pgtype.Int8

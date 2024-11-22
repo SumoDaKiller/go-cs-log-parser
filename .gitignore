@@ -9,6 +9,7 @@
 *.dylib
 go-cs-log-parser
 cs-log-parser.yaml
+output
 
 # Test binary, built with `go test -c`
 *.test

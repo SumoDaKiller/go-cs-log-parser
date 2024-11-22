@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
@@ -15,17 +16,44 @@ import (
 var k = koanf.New(".")
 
 func main() {
-	if err := k.Load(file.Provider("cs-log-parser.yaml"), yaml.Parser()); err != nil {
+	confFile := flag.String("c", "cs-log-parser.yaml", "configuration file")
+	parseOnly := flag.Bool("p", false, "Only parse logfile and skip generating output HTML files")
+	outputOnly := flag.Bool("o", false, "Only output HTML files and skip parsing log files")
+
+	flag.Parse()
+
+	if err := k.Load(file.Provider(*confFile), yaml.Parser()); err != nil {
 		log.Fatalf("error loading config: %v", err)
 	}
 
 	fmt.Println("log path is ", k.String("log_path"))
-	if err := run(k.String("log_path"), os.Stdout); err != nil {
-		log.Fatal(err)
+
+	if *parseOnly && *outputOnly {
+		log.Fatal("-o and -p cannot be used at the same time")
+	}
+
+	if *parseOnly || !*outputOnly {
+		if err := runParser(k.String("log_path"), os.Stdout); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if *outputOnly || !*parseOnly {
+		if err := runOutput(); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
-func run(path string, out io.Writer) error {
+func runOutput() error {
+	err := generateAllPages()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func runParser(path string, out io.Writer) error {
 
 	errCh := make(chan error)
 	doneCh := make(chan struct{})

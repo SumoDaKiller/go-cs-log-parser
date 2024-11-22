@@ -14,6 +14,9 @@ insert into steam_users (steam_id, steam_community_id) values ($1, $2) returning
 -- name: UpdateSteamUser :exec
 update steam_users set steam_id = $2, steam_community_id = $3 where id = $1;
 
+-- name: ListSteamUsers :many
+select * from steam_users order by steam_community_id;
+
 -- --------------------
 -- Players
 -- --------------------
@@ -30,6 +33,30 @@ insert into players (steam_user_id, name, bot) values ($1, $2, $3) returning *;
 -- name: UpdatePlayer :exec
 update players set steam_user_id = $2, name = $3, bot = $4 where id = $1;
 
+-- name: ListPlayers :many
+select p.id as id, p.steam_user_id as steam_user_id, p.name as name, su.steam_id as steam_id, su.steam_community_id as steam_community_id from players p, steam_users su where p.bot=false and p.steam_user_id=su.id order by su.steam_community_id;
+
+-- name: ListBots :many
+select p.id as id, p.steam_user_id as steam_user_id, p.name as name, su.steam_id as steam_id, su.steam_community_id as steam_community_id from players p, steam_users su where p.bot=true and p.steam_user_id=su.id order by su.steam_community_id;
+
+-- name: ListAllPlayers :many
+select p.id as id, p.steam_user_id as steam_user_id, p.name as name, su.steam_id as steam_id, su.steam_community_id as steam_community_id from players p, steam_users su where p.steam_user_id=su.id order by su.steam_community_id;
+
+-- name: GetPlayerWithStats :one
+select p.id, p.steam_user_id, p.name, su.steam_id, su.steam_community_id,
+       (select count(*) from round_teams rt, teams t where rt.player_id=p.id and rt.team_id=t.id and t.name in ('CT', 'TERRORIST')) as rounds,
+       (select count(*) from round_teams rt, teams t where rt.player_id=p.id and rt.team_id=t.id and t.name='TERRORIST') as rounds_t,
+       (select count(*) from round_teams rt, teams t where rt.player_id=p.id and rt.team_id=t.id and t.name='CT') as rounds_ct,
+       (select count(*) from kills where killer_id=p.id) as kills,
+       (select count(*) from kills where killed_id=p.id) as killed,
+       (select count(*) from kills k, special_kills sk where k.killer_id=p.id and k.special_id=sk.id and sk.name='headshot') as headshot_kills,
+       (select count(*) from kills k, special_kills sk where k.killer_id=p.id and k.special_id=sk.id and sk.name='noscope') as noscope_kills,
+       (select count(*) from kills k, special_kills sk where k.killer_id=p.id and k.special_id=sk.id and sk.name='throughsmoke') as throughsmoke_kills,
+       (select count(*) from player_suicide where player_id=p.id) as suicides,
+       (select count(*) from triggered_events te, events e where te.player_id=p.id and te.event_id=e.id and e.name='Planted_The_Bomb') as bomb_plants,
+       (select count(*) from triggered_events te, events e where te.player_id=p.id and te.event_id=e.id and e.name='Defused_The_Bomb') as bomb_defuses
+from players p, steam_users su where p.id=$1 and p.steam_user_id=su.id limit 1;
+
 -- --------------------
 -- Maps
 -- --------------------
@@ -43,6 +70,9 @@ select * from maps where name = $1 limit 1;
 -- name: CreateMap :one
 insert into maps (name) values ($1) returning *;
 
+-- name: ListMaps :many
+select * from maps order by name;
+
 -- --------------------
 -- Teams
 -- --------------------
@@ -55,6 +85,9 @@ select * from teams where name = $1 limit 1;
 
 -- name: CreateTeam :one
 insert into teams (name) values ($1) returning *;
+
+-- name: ListTeams :many
+select * from teams order by name;
 
 -- --------------------
 -- Weapons
@@ -360,3 +393,6 @@ select * from accolade where accolade_name = $1 and player_id = $2 and match_id 
 
 -- name: CreateAccolade :one
 insert into accolade (player_id, match_id, accolade_date, accolade_time, accolade_name, accolade_value, accolade_pos, accolade_score) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *;
+
+-- name: GetAccoladeForPlayer :many
+select p.id, p.steam_user_id, p.name, su.steam_id, su.steam_community_id, a.accolade_time, a.accolade_date, a.accolade_name, a.accolade_value, a.accolade_score, a.accolade_pos, apn.pretty_name, apn.description from players p, steam_users su, accolade a, accolade_pretty_names apn where p.id=$1 and p.steam_user_id=su.id and a.player_id=p.id and a.accolade_name=apn.accolade_name  order by a.accolade_date;

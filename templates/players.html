@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Players</title>
+</head>
+<body>
+<h1>Players</h1>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Steam Profile</th>
+    </tr>
+    {{range .}}
+    <tr>
+        <td><a href="player_{{.ID}}.html">{{.Name}}</a></td>
+        <td><a href="https://steamcommunity.com/profiles/{{.SteamCommunityID}}">{{.SteamCommunityID}}</a></td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>
