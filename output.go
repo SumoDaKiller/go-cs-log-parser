@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"go-cs-log-parser/api"
 	"go-cs-log-parser/database"
 	"html/template"
 	"log"
@@ -11,19 +12,21 @@ import (
 )
 
 func generateAllPages() error {
-	ctx := context.Background()
+	ctx = context.Background()
 	conn, err := pgx.Connect(ctx, k.String("database_url"))
 	if err != nil {
 		log.Fatalf("error connecting to database: %v\n", err)
 	}
 	defer conn.Close(ctx)
 
-	err = generatePlayersPage(ctx, conn)
+	queries = database.New(conn)
+
+	err = generatePlayersPage()
 	if err != nil {
 		return err
 	}
 
-	err = generatePlayerPages(ctx, conn)
+	err = generatePlayerPages()
 	if err != nil {
 		return err
 	}
@@ -31,9 +34,8 @@ func generateAllPages() error {
 	return nil
 }
 
-func generatePlayersPage(ctx context.Context, conn *pgx.Conn) error {
-	queries := database.New(conn)
-	players, err := queries.ListPlayers(ctx)
+func generatePlayersPage() error {
+	players, err := api.GetPlayers(k.String("api_url"))
 	if err != nil {
 		return err
 	}
@@ -59,25 +61,24 @@ func generatePlayersPage(ctx context.Context, conn *pgx.Conn) error {
 }
 
 type PlayerPageData struct {
-	Player         database.GetPlayerWithStatsRow
+	Player         *database.GetPlayerWithStatsRow
 	PlayerAccolade []database.GetAccoladeForPlayerRow
 }
 
-func generatePlayerPages(ctx context.Context, conn *pgx.Conn) error {
-	queries := database.New(conn)
+func generatePlayerPages() error {
 	outputPath := k.String("output_path")
 
-	players, err := queries.ListPlayers(ctx)
+	players, err := api.GetPlayers(k.String("api_url"))
 	if err != nil {
 		return err
 	}
 
 	for _, player := range players {
-		playerStats, err := queries.GetPlayerWithStats(ctx, player.ID)
+		playerStats, err := api.GetPlayerWithStats(k.String("api_url"), player.ID)
 		if err != nil {
 			return err
 		}
-		playerAccolade, err := queries.GetAccoladeForPlayer(ctx, player.ID)
+		playerAccolade, err := api.GetAccoladeForPlayer(k.String("api_url"), player.ID)
 		if err != nil {
 			return err
 		}

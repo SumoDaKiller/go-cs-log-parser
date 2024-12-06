@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
+	"go-cs-log-parser/database"
 	"io"
 	"log"
 	"os"
@@ -14,11 +16,14 @@ import (
 )
 
 var k = koanf.New(".")
+var queries *database.Queries
+var ctx context.Context
 
 func main() {
 	confFile := flag.String("c", "cs-log-parser.yaml", "configuration file")
 	parseOnly := flag.Bool("p", false, "Only parse logfile and skip generating output HTML files")
 	outputOnly := flag.Bool("o", false, "Only output HTML files and skip parsing log files")
+	startServer := flag.Bool("s", false, "Start API server. -o and -p will be ignored when -s is used")
 
 	flag.Parse()
 
@@ -28,21 +33,29 @@ func main() {
 
 	fmt.Println("log path is ", k.String("log_path"))
 
-	if *parseOnly && *outputOnly {
-		log.Fatal("-o and -p cannot be used at the same time")
-	}
-
-	if *parseOnly || !*outputOnly {
-		if err := runParser(k.String("log_path"), os.Stdout); err != nil {
+	// If we want to start the server, we ignore output and parse parameters
+	if *startServer {
+		if err := runServer(); err != nil {
 			log.Fatal(err)
+		}
+	} else {
+		if *parseOnly && *outputOnly {
+			log.Fatal("-o and -p cannot be used at the same time")
+		}
+
+		if *parseOnly || !*outputOnly {
+			if err := runParser(k.String("log_path"), os.Stdout); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		if *outputOnly || !*parseOnly {
+			if err := runOutput(); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 
-	if *outputOnly || !*parseOnly {
-		if err := runOutput(); err != nil {
-			log.Fatal(err)
-		}
-	}
 }
 
 func runOutput() error {

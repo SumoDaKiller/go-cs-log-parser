@@ -1,3 +1,5 @@
 log_path: testdata/
 output_path: output/
 database_url: postgres://<user>:<password>@<server>:5432/<database>
+server_port: 8080
+api_url: http://localhost:8080/
